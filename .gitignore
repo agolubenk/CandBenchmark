@@ -6,3 +6,4 @@ celerybeat*
 .DS_Store
 **/__pycache__/
 *.pyi
+*.pyc
