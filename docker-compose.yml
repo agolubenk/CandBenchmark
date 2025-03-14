@@ -24,3 +24,24 @@ services:
       - ./db.sqlite3:/app/db.sqlite3
     depends_on:
       - redis
+  app:
+    build:
+      context: .
+    platform: linux/amd64
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - celery-beat
+      - celery-worker
+  bot:
+    build:
+      context: .
+    platform: linux/amd64
+    command: python bot.py
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - app

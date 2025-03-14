@@ -9,14 +9,6 @@ python manage.py migrate
 ```
 
 ## Запуск
-
-### Redis + Celery
 ```bash
 docker compose up -d
 ```
-
-#### Django
-```bash
-python manage.py runserver
-```
-
