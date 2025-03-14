@@ -6,3 +6,21 @@ services:
     platform: linux/amd64
     ports:
       - "6379:6379"
+  celery-worker:
+    build:
+      context: .
+    platform: linux/amd64
+    command: python -m celery -A CandBechmark worker -l info
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - redis
+  celery-beat:
+    build:
+      context: .
+    platform: linux/amd64
+    command: python -m celery -A CandBechmark beat -l info
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - redis

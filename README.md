@@ -10,24 +10,13 @@ python manage.py migrate
 
 ## Запуск
 
-### Redis
+### Redis + Celery
 ```bash
 docker compose up -d
-```
-
-### Celery
-
-#### Worker
-```bash
-celery -A CandBechmark worker --loglevel=info
-```
-
-#### Beat
-```bash
-celery -A CandBechmark beat --loglevel=info
 ```
 
 #### Django
 ```bash
 python manage.py runserver
 ```
+
