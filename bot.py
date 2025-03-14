@@ -216,7 +216,7 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
 def main():
     # Замените YOUR_TELEGRAM_BOT_TOKEN на токен вашего бота
-    bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
+    bot_token = os.environ.get("BOT_TOKEN")
 
     application = Application.builder().token(bot_token).build()
 

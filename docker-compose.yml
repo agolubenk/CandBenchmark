@@ -3,13 +3,11 @@ services:
   redis:
     image: redis:7.2.5-alpine
     restart: always
-    platform: linux/amd64
     ports:
       - "6379:6379"
   celery-worker:
     build:
       context: .
-    platform: linux/amd64
     command: python -m celery -A CandBechmark worker -l info
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
@@ -18,7 +16,6 @@ services:
   celery-beat:
     build:
       context: .
-    platform: linux/amd64
     command: python -m celery -A CandBechmark beat -l info
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
@@ -27,7 +24,6 @@ services:
   app:
     build:
       context: .
-    platform: linux/amd64
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
@@ -39,7 +35,6 @@ services:
   bot:
     build:
       context: .
-    platform: linux/amd64
     command: python bot.py
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
