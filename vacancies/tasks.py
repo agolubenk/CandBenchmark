@@ -1,7 +1,15 @@
+import datetime
+import json
+
 from celery import shared_task
 import logging
 import requests
-from .models import Vacancy
+
+import google.generativeai as genai
+
+from CandBechmark import settings
+from .models import Vacancy, GeminiPrompt, TaskQueue
+from .utils import unify_currency, unify_grade
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +92,91 @@ def analyze_text(text):
         "grade": "Middle",
         "salary_range": "1500-2500"
     }
+
+
+@shared_task
+def execute_batches():
+    batch_size = 5
+    tasks = TaskQueue.objects.all()[:batch_size]
+
+    if tasks:
+        batch = [task.data for task in tasks]
+        gemini_worker.delay(batch)
+        TaskQueue.objects.filter(id__in=[task.id for task in tasks]).delete()
+
+
+@shared_task
+def gemini_worker(tasks):
+    gemini_prompt_obj = GeminiPrompt.objects.first()
+    if gemini_prompt_obj:
+        prompt_template = gemini_prompt_obj.prompt_text
+    else:
+        prompt_template = "Анализ строки Excel => верни JSON.\n\nТекст: "
+
+    genai.configure(api_key=settings.GOOGLE_API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
+    for i, task in enumerate(tasks):
+        row = json.loads(task)
+        if not any(cell.strip() for cell in row):
+            continue
+        row_text = " | ".join(row)
+
+        try:
+            prompt = prompt_template + row_text
+            response = model.generate_content(prompt)
+            gemini_response = response.text
+
+            if gemini_response.startswith("```json"):
+                gemini_response = gemini_response.replace("```json", "", 1).strip()
+            if gemini_response.endswith("```"):
+                gemini_response = gemini_response.rstrip("```").strip()
+            if not gemini_response.startswith("{"):
+                idx = gemini_response.find("{")
+                if idx != -1:
+                    gemini_response = gemini_response[idx:].strip()
+
+            vac_data = json.loads(gemini_response)
+
+            currency_clean = unify_currency(vac_data.get('Currency') or '')
+            grade_clean = unify_grade(vac_data.get('Grade') or '')
+
+            date_posted = vac_data.get('Date Posted')
+
+            try:
+                if isinstance(date_posted, int) or date_posted.is_digit():
+                    if isinstance(date_posted, str):
+                        date_posted = int(date_posted)
+                    date_posted = datetime.datetime.fromordinal(
+                        datetime.datetime(1900, 1, 1).toordinal() + date_posted - 2
+                    )
+            except Exception:
+                date_posted = None
+
+            if not date_posted:
+                date_posted = datetime.date.today()
+
+            Vacancy.objects.create(
+                company=vac_data.get('Company') or '',
+                geo=vac_data.get('Geo') or '',
+                specialization=vac_data.get('Specialization') or '',
+                grade=grade_clean,
+                salary_min=vac_data.get('Salary Min'),
+                salary_max=vac_data.get('Salary Max'),
+                bonus=vac_data.get('Bonus') or '',
+                bonus_conditions=vac_data.get('Bonus Conditions') or '',
+                currency=currency_clean,
+                gross_net=vac_data.get('Gross/Net') or '',
+                work_format=vac_data.get('Work Format') or '',
+                date_posted=date_posted,
+                source=vac_data.get('Source') or 'Excel Import',
+                author=vac_data.get('Author') or '',
+                description=row_text
+            )
+
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON ошибка в строке {i + 1}: {e}. Ответ AI: {gemini_response}")
+        except Exception as e:
+            logger.exception(f"Ошибка обработки строки {i + 1}: {e}")
+
+    return 'Gemini Worker отработал'

@@ -46,3 +46,8 @@ class GeminiPrompt(models.Model):
     def __str__(self):
         # Выводим первые 50 символов промпта
         return self.prompt_text[:50]
+
+
+class TaskQueue(models.Model):
+    data = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

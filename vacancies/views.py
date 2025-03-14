@@ -9,7 +9,7 @@ import datetime
 
 from django.conf import settings
 from django.views import View
-from .models import Vacancy, GeminiResult, GeminiPrompt
+from .models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue
 from .serializers import VacancySerializer
 from .forms import GeminiInputForm, GeminiPromptForm
 
@@ -455,7 +455,8 @@ def upload_excel(request):
                         row_cells.append(str(cell.value))
                     else:
                         row_cells.append("")
-                raw_rows.append(row_cells)
+                if any(row_cells):
+                    raw_rows.append(row_cells)
 
             max_cols = max(len(r) for r in raw_rows) if raw_rows else 0
             formula_columns = set()
@@ -513,79 +514,15 @@ def process_excel(request):
     """
     # (код остался без изменений)
     from django.contrib import messages
-    from .utils import unify_currency, unify_grade
 
     rows_data = request.session.get('excel_rows')
     if not rows_data:
         messages.error(request, "Нет данных для обработки.")
         return redirect('upload_excel')
 
-    gemini_prompt_obj = GeminiPrompt.objects.first()
-    if gemini_prompt_obj:
-        prompt_template = gemini_prompt_obj.prompt_text
-    else:
-        prompt_template = "Анализ строки Excel => верни JSON.\n\nТекст: "
+    for row in rows_data[1:]:
+        TaskQueue.objects.create(data=json.dumps(row))
 
-    genai.configure(api_key=settings.GOOGLE_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-
-    row_count = 0
-    for i, row in enumerate(rows_data):
-        if i == 0:  # пропускаем заголовок
-            continue
-
-        if not any(cell.strip() for cell in row):
-            continue
-
-        row_count += 1
-        row_text = " | ".join(row)
-
-        try:
-            prompt = prompt_template + row_text
-            response = model.generate_content(prompt)
-            gemini_response = response.text
-
-            if gemini_response.startswith("```json"):
-                gemini_response = gemini_response.replace("```json", "", 1).strip()
-            if gemini_response.endswith("```"):
-                gemini_response = gemini_response.rstrip("```").strip()
-            if not gemini_response.startswith("{"):
-                idx = gemini_response.find("{")
-                if idx != -1:
-                    gemini_response = gemini_response[idx:].strip()
-
-            vac_data = json.loads(gemini_response)
-
-            currency_clean = unify_currency(vac_data.get('Currency') or '')
-            grade_clean = unify_grade(vac_data.get('Grade') or '')
-
-            date_posted = vac_data.get('Date Posted')
-            if not date_posted:
-                date_posted = datetime.date.today()
-
-            Vacancy.objects.create(
-                company=vac_data.get('Company') or '',
-                geo=vac_data.get('Geo') or '',
-                specialization=vac_data.get('Specialization') or '',
-                grade=grade_clean,
-                salary_min=vac_data.get('Salary Min'),
-                salary_max=vac_data.get('Salary Max'),
-                bonus=vac_data.get('Bonus') or '',
-                bonus_conditions=vac_data.get('Bonus Conditions') or '',
-                currency=currency_clean,
-                gross_net=vac_data.get('Gross/Net') or '',
-                work_format=vac_data.get('Work Format') or '',
-                date_posted=date_posted,
-                source=vac_data.get('Source') or 'Excel Import',
-                author=vac_data.get('Author') or '',
-                description=row_text
-            )
-
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON ошибка в строке {i+1}: {e}. Ответ AI: {gemini_response}")
-        except Exception as e:
-            logger.exception(f"Ошибка обработки строки {i+1}: {e}")
-
-    messages.success(request, f"Успешно обработано {row_count} строк.")
+    messages.success(request, f"Строки успешно добавлены в обработку.")
     request.session.pop('excel_rows', None)
     return redirect('index')
