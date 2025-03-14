@@ -4,3 +4,5 @@ db.sqlite3
 *.xlsx
 celerybeat*
 .DS_Store
+**/__pycache__/
+*.pyi
