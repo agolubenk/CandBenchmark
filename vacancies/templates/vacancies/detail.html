@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Детали вакансии - {{ vacancy.company }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    dl {
+      width: 100%;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+    }
+    dt {
+      float: left;
+      width: 200px;
+      font-weight: bold;
+      clear: left;
+      padding: 4px 0;
+    }
+    dd {
+      margin: 0 0 4px 210px;
+      padding: 4px 0;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #007BFF;
+      color: white;
+      padding: 8px 15px;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    @media (max-width: 600px) {
+      dt {
+        width: 100%;
+      }
+      dd {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Детали вакансии</h1>
+  <dl>
+    <dt>Компания:</dt>
+    <dd>{{ vacancy.company }}</dd>
+
+    <dt>Локация:</dt>
+    <dd>{{ vacancy.geo }}</dd>
+
+    <dt>Специализация:</dt>
+    <dd>{{ vacancy.specialization }}</dd>
+
+    <dt>Грейд:</dt>
+    <dd>{{ vacancy.grade }}</dd>
+
+    <dt>Зарплата от:</dt>
+    <dd>{{ vacancy.salary_min }}</dd>
+
+    <dt>Зарплата до:</dt>
+    <dd>{{ vacancy.salary_max }}</dd>
+
+    <dt>Бонус:</dt>
+    <dd>{{ vacancy.bonus }}</dd>
+
+    <dt>Условия бонуса:</dt>
+    <dd>{{ vacancy.bonus_conditions }}</dd>
+
+    <dt>Валюта:</dt>
+    <dd>{{ vacancy.currency }}</dd>
+
+    <dt>Тип оплаты (Gross/Net):</dt>
+    <dd>{{ vacancy.gross_net }}</dd>
+
+    <dt>Формат работы:</dt>
+    <dd>{{ vacancy.work_format }}</dd>
+
+    <dt>Дата публикации:</dt>
+    <dd>{{ vacancy.date_posted }}</dd>
+
+    <dt>Источник:</dt>
+    <dd>{{ vacancy.source }}</dd>
+
+    <dt>Автор:</dt>
+    <dd>{{ vacancy.author }}</dd>
+
+    <dt>Описание вакансии:</dt>
+    <dd>{{ vacancy.description }}</dd>
+
+    <dt>Дата и время создания:</dt>
+    <dd>{{ vacancy.created_at }}</dd>
+  </dl>
+
+  <p><a href="{% url 'index' %}" class="back-link">Вернуться к списку вакансий</a></p>
+</body>
+</html>

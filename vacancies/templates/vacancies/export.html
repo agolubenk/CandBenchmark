@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Экспорт вакансий</title>
+    <!-- Bootstrap для оформления -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Экспорт вакансий в Excel</h1>
+    <p>Нажмите кнопку ниже, чтобы скачать данные вакансий в формате Excel.</p>
+    <a href="{% url 'export_vacancies' %}" class="btn btn-info">Экспортировать</a>
+    <br><br>
+    <a href="{% url 'index' %}" class="btn btn-secondary">Вернуться к списку вакансий</a>
+</div>
+</body>
+</html>

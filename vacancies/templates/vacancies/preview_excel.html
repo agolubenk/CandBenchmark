@@ -1,0 +1,41 @@
+<!-- vacancies/templates/vacancies/preview_excel.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Предпросмотр Excel</title>
+    <style>
+        table, th, td {
+            border: 1px solid #cccccc;
+            border-collapse: collapse;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Предпросмотр данных из Excel</h1>
+    <table>
+        <thead>
+            <tr>
+                {% for head in headers %}
+                <th>{{ head }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data_rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post" action="{% url 'process_excel' %}">
+        {% csrf_token %}
+        <button type="submit">Подтвердить и отправить в AI</button>
+    </form>
+</body>
+</html>

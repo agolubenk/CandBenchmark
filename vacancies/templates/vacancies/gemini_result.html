@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini AI — Результаты</title>
+</head>
+<body>
+    <a href="{% url 'gemini' %}">Вернуться к вводу</a> <a href="{% url 'index' %}">На главную</a>
+    <br>
+    <h1>Результаты обработки Gemini AI</h1>
+    {% if results %}
+        {% for result in results %}
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+                <p><strong>Введённый текст:</strong> {{ result.input_text }}</p>
+                <p><strong>Обработанный текст:</strong> {{ result.processed_text }}</p>
+                <small>Время обработки: {{ result.created_at }}</small>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Пока что нет результатов.</p>
+    {% endif %}
+    <br>
+    <a href="{% url 'gemini' %}">Вернуться к вводу</a>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Новый запрос для Gemini</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+      }
+      .nav-links {
+          margin-bottom: 20px;
+      }
+      .nav-links a {
+          text-decoration: none;
+          color: #007BFF;
+          margin-right: 15px;
+      }
+      .form-container {
+          width: 90%;
+          max-width: 600px;
+          margin: 0 auto;
+      }
+      form {
+          display: flex;
+          flex-direction: column;
+      }
+      form p {
+          margin-bottom: 12px;
+      }
+      label {
+          font-weight: bold;
+      }
+      input, textarea, select {
+          width: 100%;
+          padding: 8px;
+          margin-top: 4px;
+          box-sizing: border-box;
+      }
+      button {
+          padding: 10px;
+          background: #4CAF50;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+      }
+      button:hover {
+          background: #45a049;
+      }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Новый запрос для Gemini</h1>
+    <div class="nav-links">
+      <a href="{% url 'change_prompt' %}">Редактировать промпт</a>
+      <a href="{% url 'index' %}">Вернуться на главную</a>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Отправить запрос</button>
+    </form>
+      <br>
+    <a href="{% url 'upload_excel' %}">Загрузить Excel</a>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Сводная статистика</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid #aaa;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        th {
+            background: #eee;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        .filter-label {
+            margin-right: 10px;
+        }
+        .filter-input {
+            margin-right: 20px;
+        }
+
+        /* Адаптивная верстка */
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+                width: 100%;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                margin-bottom: 15px;
+            }
+            td {
+                padding-left: 50%;
+                position: relative;
+            }
+            td::before {
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                white-space: nowrap;
+                font-weight: bold;
+            }
+            /* Первая таблица (gross) */
+            /* Предположим, в ней такие столбцы */
+            /* (гео, спец, грейд, мин, макс, медиана, валюта) */
+            td:nth-of-type(1)::before { content: "Гео"; }
+            td:nth-of-type(2)::before { content: "Специализация"; }
+            td:nth-of-type(3)::before { content: "Грейд"; }
+            td:nth-of-type(4)::before { content: "Минимум (gross)"; }
+            td:nth-of-type(5)::before { content: "Максимум (gross)"; }
+            td:nth-of-type(6)::before { content: "Медиана рынка (gross)"; }
+            td:nth-of-type(7)::before { content: "Валюта"; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Сводная статистика по вакансиям</h1>
+
+<!-- Фильтр по specialization, grade и geo -->
+<form method="GET" action="">
+    <label class="filter-label">Специализация:</label>
+    <input
+      class="filter-input"
+      type="text"
+      name="specialization"
+      value="{{ spec_filter }}"
+      placeholder="Например: Data Engineer"
+    />
+
+    <label class="filter-label">Грейд:</label>
+    <input
+      class="filter-input"
+      type="text"
+      name="grade"
+      value="{{ grade_filter }}"
+      placeholder="Например: Middle"
+    />
+
+    <label class="filter-label">Локация:</label>
+    <input
+      class="filter-input"
+      type="text"
+      name="geo"
+      value="{{ geo_filter }}"
+      placeholder="Например: Беларусь, Минск"
+    />
+
+    <button type="submit">Применить фильтры</button>
+</form>
+
+
+<!-- 1) Первая таблица: выводим данные в gross (как раньше) -->
+<h2>Таблица (Gross)</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Гео</th>
+            <th>Специализация</th>
+            <th>Грейд</th>
+            <th>Минимум (gross)</th>
+            <th>Максимум (gross)</th>
+            <th>Медиана рынка (gross)</th>
+            <th>Валюта</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in results_gross %}
+        <tr>
+            <td>{{ row.geo }}</td>
+            <td>{{ row.specialization }}</td>
+            <td>{{ row.grade }}</td>
+            <td>
+                {% if row.min_median is not None %}
+                    {{ row.min_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>
+                {% if row.max_median is not None %}
+                    {{ row.max_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>
+                {% if row.market_median is not None %}
+                    {{ row.market_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>{{ row.currency }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br/>
+
+<!-- 2) Вторая таблица: с переводом суммы в BYN -->
+<h2>Таблица (BYN)</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Гео</th>
+            <th>Специализация</th>
+            <th>Грейд</th>
+            <th>Минимум (BYN)</th>
+            <th>Максимум (BYN)</th>
+            <th>Медиана рынка (BYN)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in results_byn %}
+        <tr>
+            <td>{{ row.geo }}</td>
+            <td>{{ row.specialization }}</td>
+            <td>{{ row.grade }}</td>
+            <td>
+                {% if row.byn_min_median is not None %}
+                    {{ row.byn_min_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>
+                {% if row.byn_max_median is not None %}
+                    {{ row.byn_max_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+            <td>
+                {% if row.byn_market_median is not None %}
+                    {{ row.byn_market_median }}
+                {% else %}
+                    --
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>
