@@ -3,6 +3,7 @@ import json
 import logging
 from datetime import datetime
 import requests
+from asgiref.sync import sync_to_async
 
 # Настраиваем окружение Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CandBechmark.settings")
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 VACANCY = 1
 
 
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: CallbackContext) -> None:
     """
     Команда /start приветствует пользователя и сообщает,
     что для добавления вакансии следует использовать команду /vacancy.
@@ -43,10 +44,10 @@ def start(update: Update, context: CallbackContext) -> None:
         "Добро пожаловать в систему вакансий!\n"
         "Чтобы добавить вакансию с обработкой через Gemini AI, введите команду /vacancy."
     )
-    update.message.reply_text(message)
+    await update.message.reply_text(message)
 
 
-def ask_vacancy(update: Update, context: CallbackContext) -> int:
+async def ask_vacancy(update: Update, context: CallbackContext) -> int:
     """
     При вызове команды /vacancy бот отправляет инструкцию,
     как надо отправлять вакансию одним сообщением в формате JSON.
@@ -76,7 +77,7 @@ def ask_vacancy(update: Update, context: CallbackContext) -> int:
         "Пример формата:\n"
         f"{json.dumps(sample, indent=2, ensure_ascii=False)}"
     )
-    update.message.reply_text(instructions)
+    await update.message.reply_text(instructions)
     return VACANCY
 
 
@@ -99,7 +100,41 @@ def call_gemini_ai(input_text: str, prompt: str) -> str:
         return f"Ошибка при вызове Gemini AI: {e}"
 
 
-def process_vacancy(update: Update, context: CallbackContext) -> int:
+@sync_to_async
+def get_prompt():
+    return GeminiPrompt.objects.first()
+
+
+@sync_to_async
+def save_vacancy(company, geo, specialization, grade,
+                 salary_min, salary_max, bonus, bonus_conditions,
+                 currency, gross_net, work_format, date_posted, source,
+                 author, gemini_response):
+    try:
+        vacancy = Vacancy.objects.create(
+            company=company,
+            geo=geo,
+            specialization=specialization,
+            grade=grade,
+            salary_min=salary_min,
+            salary_max=salary_max,
+            bonus=bonus,
+            bonus_conditions=bonus_conditions,
+            currency=currency,
+            gross_net=gross_net,
+            work_format=work_format,
+            date_posted=date_posted,
+            source=source,
+            author=author,
+            description=gemini_response  # Ответ от Gemini AI сохраняется в поле description
+        )
+        vacancy.save()
+        return "Вакансия успешно сохранена с обработанным описанием!"
+    except Exception as e:
+        logger.exception("Ошибка при сохранении вакансии:")
+        return f"Ошибка при сохранении вакансии: {e}"
+
+async def process_vacancy(update: Update, context: CallbackContext) -> int:
     """
     Обработка единственного сообщения с вакансиями в формате JSON.
     После разбора данных формируется текст вакансии, которому предшествует промпт.
@@ -109,7 +144,7 @@ def process_vacancy(update: Update, context: CallbackContext) -> int:
     try:
         data = json.loads(text)
     except Exception as e:
-        update.message.reply_text(f"Ошибка при разборе JSON: {e}")
+        await update.message.reply_text(f"Ошибка при разборе JSON: {e}")
         return VACANCY
 
     # Извлечение данных вакансии
@@ -156,7 +191,7 @@ def process_vacancy(update: Update, context: CallbackContext) -> int:
     # Определяем промпт: либо из JSON, либо дефолтный из модели GeminiPrompt, либо статичная строка
     prompt_text = data.get("prompt", None)
     if not prompt_text:
-        gemini_prompt_instance = GeminiPrompt.objects.first()
+        gemini_prompt_instance = await get_prompt()
         if gemini_prompt_instance:
             prompt_text = gemini_prompt_instance.prompt_text
         else:
@@ -166,34 +201,16 @@ def process_vacancy(update: Update, context: CallbackContext) -> int:
     gemini_response = call_gemini_ai(vacancy_text, prompt_text)
 
     # Сохранение вакансии в базу данных с полученным ответом
-    try:
-        vacancy = Vacancy.objects.create(
-            company=company,
-            geo=geo,
-            specialization=specialization,
-            grade=grade,
-            salary_min=salary_min,
-            salary_max=salary_max,
-            bonus=bonus,
-            bonus_conditions=bonus_conditions,
-            currency=currency,
-            gross_net=gross_net,
-            work_format=work_format,
-            date_posted=date_posted,
-            source=source,
-            author=author,
-            description=gemini_response  # Ответ от Gemini AI сохраняется в поле description
-        )
-        vacancy.save()
-        update.message.reply_text("Вакансия успешно сохранена с обработанным описанием!")
-    except Exception as e:
-        logger.exception("Ошибка при сохранении вакансии:")
-        update.message.reply_text(f"Ошибка при сохранении вакансии: {e}")
+    result = await save_vacancy(company, geo, specialization, grade,
+                                salary_min, salary_max, bonus, bonus_conditions,
+                                currency, gross_net, work_format, date_posted, source,
+                                author, gemini_response)
+    await update.message.reply_text(result)
     return ConversationHandler.END
 
 
-def cancel(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text("Операция отменена.")
+async def cancel(update: Update, context: CallbackContext) -> int:
+    await update.message.reply_text("Операция отменена.")
     return ConversationHandler.END
 
 
