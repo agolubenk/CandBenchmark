@@ -14,9 +14,9 @@ app.autodiscover_tasks()
 
 # Пример: настройка периодического задания для celery beat
 app.conf.beat_schedule = {
-    'fetch-vacancies-every-10-minutes': {
-        'task': 'vacancies.tasks.fetch_vacancies',
-        'schedule': 600.0,  # 600 секунд = 10 минут
+    'run-gemini-worker-every-20-seconds': {
+        'task': 'vacancies.tasks.execute_batches',
+        'schedule': 20
     },
 }
 

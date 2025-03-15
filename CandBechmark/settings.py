@@ -131,8 +131,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Настройки для брокера и бекенда результатов (используя Redis)
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = f'redis://{os.getenv("REDIS_HOST")}:6379/0'
+CELERY_RESULT_BACKEND = f'redis://{os.getenv("REDIS_HOST")}:6379/0'
 
 #GOOGLE_API_KEY = userdata.get.os.getenv('GOOGLE_API_KEY')
 

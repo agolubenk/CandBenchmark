@@ -1,0 +1,42 @@
+---
+services:
+  redis:
+    image: redis:7.2.5-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+  celery-worker:
+    build:
+      context: .
+    command: python -m celery -A CandBechmark worker -l info
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - redis
+  celery-beat:
+    build:
+      context: .
+    command: python -m celery -A CandBechmark beat -l info
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - redis
+  app:
+    build:
+      context: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - celery-beat
+      - celery-worker
+  bot:
+    build:
+      context: .
+    command: python bot.py
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    depends_on:
+      - app
