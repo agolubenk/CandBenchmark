@@ -96,7 +96,7 @@ def analyze_text(text):
 
 @shared_task
 def execute_batches():
-    batch_size = 5
+    batch_size = 10
     tasks = TaskQueue.objects.all()[:batch_size]
 
     if tasks:
@@ -108,22 +108,37 @@ def execute_batches():
 @shared_task
 def gemini_worker(tasks):
     gemini_prompt_obj = GeminiPrompt.objects.first()
+
     if gemini_prompt_obj:
         prompt_template = gemini_prompt_obj.prompt_text
     else:
-        prompt_template = "Анализ строки Excel => верни JSON.\n\nТекст: "
+        prompt_template = (
+            "Проанализируй следующий текст о вакансии и верни результат в виде JSON-объекта с указанными ключами. "
+            "JSON должен содержать следующие поля:\n"
+            "- 'Company': название компании.\n"
+            "- 'Geo': местоположение компании или вакансии.\n"
+            "- 'Specialization': специализация или направление работы.\n"
+            "- 'Grade': уровень должности.\n"
+            "- 'Salary Min': минимальная зарплата.\n"
+            "- 'Salary Max': максимальная зарплата.\n"
+            "- 'Bonus': размер бонуса.\n"
+            "- 'Bonus Conditions': условия предоставления бонуса.\n"
+            "- 'Currency': валюта расчёта.\n"
+            "- 'Gross/Net': информация о типе оплаты (до вычета/после вычета налогов).\n"
+            "- 'Work Format': формат работы (удаленная, офис и др.).\n"
+            "- 'Date Posted': дата публикации вакансии.\n"
+            "- 'Source': источник вакансии.\n"
+            "- 'Author': автор публикации вакансии.\n\n"
+            "Не добавляй никаких дополнительных полей или комментариев. Верни только валидный JSON-объект.\n\n"
+            "Текст: "
+        )
 
     genai.configure(api_key=settings.GOOGLE_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
 
     for i, task in enumerate(tasks):
-        row = json.loads(task)
-        if not any(cell.strip() for cell in row):
-            continue
-        row_text = " | ".join(row)
-
         try:
-            prompt = prompt_template + row_text
+            prompt = prompt_template + task
             response = model.generate_content(prompt)
             gemini_response = response.text
 
@@ -171,7 +186,7 @@ def gemini_worker(tasks):
                 date_posted=date_posted,
                 source=vac_data.get('Source') or 'Excel Import',
                 author=vac_data.get('Author') or '',
-                description=row_text
+                description=task
             )
 
         except json.JSONDecodeError as e:

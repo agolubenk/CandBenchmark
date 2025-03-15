@@ -1,21 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from django import forms
-import os
+from django.http import HttpResponse
 import openpyxl
-import json
 import logging
-import datetime
 
-from django.conf import settings
-from django.views import View
-from .models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue
-from .serializers import VacancySerializer
-from .forms import GeminiInputForm, GeminiPromptForm
+from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue
+from vacancies.forms import GeminiInputForm, GeminiPromptForm
 from django.contrib import messages
-
-# Импортируем модуль для работы с Gemini API через SDK
-import google.generativeai as genai
 
 # Для сводной статистики
 from statistics import median
@@ -87,93 +77,7 @@ def gemini(request):
     if request.method == 'POST':
         form = GeminiInputForm(request.POST)
         if form.is_valid():
-            input_text = form.cleaned_data['text']
-
-            # Получаем кастомный промпт из модели, если он установлен.
-            gemini_prompt_obj = GeminiPrompt.objects.first()
-            if gemini_prompt_obj:
-                prompt_template = gemini_prompt_obj.prompt_text
-            else:
-                prompt_template = (
-                    "Проанализируй следующий текст о вакансии и верни результат в виде JSON-объекта с указанными ключами. "
-                    "JSON должен содержать следующие поля:\n"
-                    "- 'Company': название компании.\n"
-                    "- 'Geo': местоположение компании или вакансии.\n"
-                    "- 'Specialization': специализация или направление работы.\n"
-                    "- 'Grade': уровень должности.\n"
-                    "- 'Salary Min': минимальная зарплата.\n"
-                    "- 'Salary Max': максимальная зарплата.\n"
-                    "- 'Bonus': размер бонуса.\n"
-                    "- 'Bonus Conditions': условия предоставления бонуса.\n"
-                    "- 'Currency': валюта расчёта.\n"
-                    "- 'Gross/Net': информация о типе оплаты (до вычета/после вычета налогов).\n"
-                    "- 'Work Format': формат работы (удаленная, офис и др.).\n"
-                    "- 'Date Posted': дата публикации вакансии.\n"
-                    "- 'Source': источник вакансии.\n"
-                    "- 'Author': автор публикации вакансии.\n\n"
-                    "Не добавляй никаких дополнительных полей или комментариев. Верни только валидный JSON-объект.\n\n"
-                    "Текст: "
-                )
-            # Формируем окончательный промпт, добавляя текст вакансии в конец шаблона
-            prompt = prompt_template + input_text
-
-            try:
-                genai.configure(api_key=settings.GOOGLE_API_KEY)
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(prompt)
-                gemini_response = response.text
-
-                # Удаляем возможную Markdown-разметку
-                if gemini_response.startswith("```json"):
-                    gemini_response = gemini_response.replace("```json", "", 1).strip()
-                if gemini_response.endswith("```"):
-                    gemini_response = gemini_response.rstrip("```").strip()
-                if not gemini_response.startswith("{"):
-                    idx = gemini_response.find("{")
-                    if idx != -1:
-                        gemini_response = gemini_response[idx:].strip()
-
-                try:
-                    vacancy_data = json.loads(gemini_response)
-                    date_posted = vacancy_data.get('Date Posted')
-                    if not date_posted:
-                        date_posted = datetime.date.today()
-
-                    try:
-                        vacancy = Vacancy.objects.create(
-                            company=vacancy_data.get('Company') or '',
-                            geo=vacancy_data.get('Geo') or '',
-                            specialization=vacancy_data.get('Specialization') or '',
-                            grade=vacancy_data.get('Grade') or '',
-                            salary_min=vacancy_data.get('Salary Min'),
-                            salary_max=vacancy_data.get('Salary Max'),
-                            bonus=vacancy_data.get('Bonus') or '',
-                            bonus_conditions=vacancy_data.get('Bonus Conditions') or '',
-                            currency=vacancy_data.get('Currency') or '',
-                            gross_net=vacancy_data.get('Gross/Net') or '',
-                            work_format=vacancy_data.get('Work Format') or '',
-                            date_posted=date_posted,
-                            source=vacancy_data.get('Source') or '',
-                            author=vacancy_data.get('Author') or '',
-                            description=input_text
-                        )
-                        vacancy.save()
-                        processed_text = "Вакансия успешно создана на основе ответа Gemini."
-                    except Exception as e:
-                        processed_text = f"Ошибка при создании вакансии: {e}"
-                        logger.exception("Ошибка при создании вакансии:")
-                except json.JSONDecodeError as e:
-                    processed_text = f"Ошибка при разборе JSON от Gemini: {e}. Ответ Gemini: {gemini_response}"
-                    logger.error(f"Ошибка при разборе JSON: {e}. Ответ Gemini: {gemini_response}")
-                except Exception as e:
-                    processed_text = f"Произошла общая ошибка: {e}"
-                    logger.exception("Произошла общая ошибка:")
-
-            except Exception as e:
-                processed_text = f"Ошибка вызова Gemini API: {e}"
-                logger.exception("Ошибка вызова Gemini API:")
-
-            GeminiResult.objects.create(input_text=input_text, processed_text=processed_text)
+            TaskQueue.objects.create(data=form.cleaned_data['text'])
             return redirect("gemini_result")
     else:
         form = GeminiInputForm()
@@ -453,7 +357,7 @@ def upload_excel(request):
                 row_cells = []
                 for cell in row:
                     if cell.value is not None:
-                        row_cells.append(str(cell.value))
+                        row_cells.append(str(cell.value).strip())
                     else:
                         row_cells.append("")
                 if any(row_cells):
@@ -513,7 +417,7 @@ def process_excel(request):
     """
     Шаг 3: Нажатие "Подтвердить" => прогоняем ВСЕ строки (кроме заголовков и пустых) через AI.
     """
-    # (код остался без изменений
+    # (код остался без изменений)
 
     rows_data = request.session.get('excel_rows')
     if not rows_data:
@@ -521,7 +425,7 @@ def process_excel(request):
         return redirect('upload_excel')
 
     for row in rows_data[1:]:
-        TaskQueue.objects.create(data=json.dumps(row))
+        TaskQueue.objects.create(data=" | ".join(row))
 
     messages.success(request, f"Строки успешно добавлены в обработку.")
     request.session.pop('excel_rows', None)

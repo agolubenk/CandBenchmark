@@ -10,5 +10,5 @@ python manage.py migrate
 
 ## Запуск
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
