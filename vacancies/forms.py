@@ -5,7 +5,7 @@ from .models import GeminiPrompt, Vacancy  # <-- Подтягиваем Vacancy
 from .utils import unify_currency, unify_grade  # <-- Функции «причесывания», см. Шаг 0
 
 class GeminiInputForm(forms.Form):
-    text = forms.CharField(widget=forms.Textarea, label="Текст вакансии")
+    text = forms.CharField(widget=forms.Textarea, label="")
 
 class ExcelUploadForm(forms.Form):
     excel_file = forms.FileField(label="Загрузите Excel-файл")
@@ -16,7 +16,7 @@ class GeminiPromptForm(forms.ModelForm):
         model = GeminiPrompt
         fields = ['prompt_text']
         labels = {
-            'prompt_text': 'Промпт для Gemini AI',
+            'prompt_text': '',
         }
 
 

@@ -1,71 +1,41 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Новый запрос для Gemini</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-      body {
-          font-family: Arial, sans-serif;
-      }
-      .nav-links {
-          margin-bottom: 20px;
-      }
-      .nav-links a {
-          text-decoration: none;
-          color: #007BFF;
-          margin-right: 15px;
-      }
-      .form-container {
-          width: 90%;
-          max-width: 600px;
-          margin: 0 auto;
-      }
-      form {
-          display: flex;
-          flex-direction: column;
-      }
-      form p {
-          margin-bottom: 12px;
-      }
-      label {
-          font-weight: bold;
-      }
-      input, textarea, select {
-          width: 100%;
-          padding: 8px;
-          margin-top: 4px;
-          box-sizing: border-box;
-      }
-      button {
-          padding: 10px;
-          background: #4CAF50;
-          color: #fff;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-      }
-      button:hover {
-          background: #45a049;
-      }
-  </style>
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
 </head>
 <body>
-  <div class="form-container">
-    <h1>Новый запрос для Gemini</h1>
-    <div class="nav-links">
-      <a href="{% url 'change_prompt' %}">Редактировать промпт</a>
-      <a href="{% url 'index' %}">Вернуться на главную</a>
+  <!-- Контейнер с full-height для вертикального центрирования -->
+  <div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <h1 class="mb-4 text-center">Новый запрос для Gemini</h1>
+      <div class="d-flex gap-3 mb-3 justify-content-center">
+        <a href="{% url 'change_prompt' %}" class="btn btn-link">Редактировать промпт</a>
+        <a href="{% url 'index' %}" class="btn btn-link">Вернуться на главную</a>
+      </div>
+        <hr>
+      <form method="post">
+        {% csrf_token %}
+          <div class="mb-3 text-center">
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-75 text-center">Отправить запрос</button>
+          </div>
+      </form>
+      <!-- Заголовок "или" перед кнопкой загрузки Excel -->
+      <div class="text-center mt-4">
+        <h4>или</h4>
+      </div>
+      <div class="text-center mt-2">
+        <a href="{% url 'upload_excel' %}" class="btn btn-success btn-lg w-75">Загрузить Excel</a>
+      </div>
     </div>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Отправить запрос</button>
-    </form>
-      <br>
-    <a href="{% url 'upload_excel' %}">Загрузить Excel</a>
-
-
   </div>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>

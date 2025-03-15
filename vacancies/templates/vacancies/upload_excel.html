@@ -1,16 +1,26 @@
-<!-- vacancies/templates/vacancies/upload_excel.html -->
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <title>Загрузить Excel</title>
+  <meta charset="utf-8">
+  <title>Загрузить Excel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+
 </head>
 <body>
-    <h1>Загрузить Excel</h1>
+  <div class="container mt-4">
+    <h1 class="mb-4">Загрузить Excel</h1>
     <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Загрузить</button>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Загрузить</button>
     </form>
+  </div>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 </body>
 </html>

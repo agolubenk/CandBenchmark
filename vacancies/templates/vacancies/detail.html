@@ -1,101 +1,79 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Детали вакансии - {{ vacancy.company }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    dl {
-      width: 100%;
-      overflow: hidden;
-      padding: 0;
-      margin: 0;
-    }
-    dt {
-      float: left;
-      width: 200px;
-      font-weight: bold;
-      clear: left;
-      padding: 4px 0;
-    }
-    dd {
-      margin: 0 0 4px 210px;
-      padding: 4px 0;
-    }
-    .back-link {
-      display: inline-block;
-      margin-top: 20px;
-      background-color: #007BFF;
-      color: white;
-      padding: 8px 15px;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-    @media (max-width: 600px) {
-      dt {
-        width: 100%;
-      }
-      dd {
-        margin-left: 0;
-      }
-    }
-  </style>
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <!-- Подключение Bootstrap Icons (если требуется, можно локализовать аналогичным образом) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
-  <h1>Детали вакансии</h1>
-  <dl>
-    <dt>Компания:</dt>
-    <dd>{{ vacancy.company }}</dd>
+  <div class="container mt-4">
+    <!-- Заголовок с кнопкой "назад" в синем кружке -->
+    <div class="d-flex align-items-center mb-4">
+      <a href="{% url 'index' %}" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <h2 class="mb-0">Детали вакансии <strong>{{ vacancy.grade }}</strong> {{ vacancy.specialization }}</h2>
+    </div>
+<hr>
+    <!-- Строка с двумя колонками -->
+    <div class="row">
+      <!-- Левая колонка с подробностями -->
+      <div class="col-md-6">
+        <dl class="row">
+          <dt class="col-sm-5">Компания:</dt>
+          <dd class="col-sm-7">{{ vacancy.company }}</dd>
 
-    <dt>Локация:</dt>
-    <dd>{{ vacancy.geo }}</dd>
+          <dt class="col-sm-5">Локация:</dt>
+          <dd class="col-sm-7">{{ vacancy.geo }}</dd>
 
-    <dt>Специализация:</dt>
-    <dd>{{ vacancy.specialization }}</dd>
+          <dt class="col-sm-5">Зарплата от:</dt>
+          <dd class="col-sm-7">{{ vacancy.salary_min }}</dd>
 
-    <dt>Грейд:</dt>
-    <dd>{{ vacancy.grade }}</dd>
+          <dt class="col-sm-5">Зарплата до:</dt>
+          <dd class="col-sm-7">{{ vacancy.salary_max }}</dd>
 
-    <dt>Зарплата от:</dt>
-    <dd>{{ vacancy.salary_min }}</dd>
+          <dt class="col-sm-5">Валюта:</dt>
+          <dd class="col-sm-7">{{ vacancy.currency }}</dd>
 
-    <dt>Зарплата до:</dt>
-    <dd>{{ vacancy.salary_max }}</dd>
+          <dt class="col-sm-5">Тип оплаты (Gross/Net):</dt>
+          <dd class="col-sm-7">{{ vacancy.gross_net }}</dd>
 
-    <dt>Бонус:</dt>
-    <dd>{{ vacancy.bonus }}</dd>
+          <dt class="col-sm-5">Бонус:</dt>
+          <dd class="col-sm-7">{{ vacancy.bonus }}</dd>
 
-    <dt>Условия бонуса:</dt>
-    <dd>{{ vacancy.bonus_conditions }}</dd>
+          <dt class="col-sm-5">Условия бонуса:</dt>
+          <dd class="col-sm-7">{{ vacancy.bonus_conditions }}</dd>
 
-    <dt>Валюта:</dt>
-    <dd>{{ vacancy.currency }}</dd>
+          <dt class="col-sm-5">Источник:</dt>
+          <dd class="col-sm-7">{{ vacancy.source }}</dd>
 
-    <dt>Тип оплаты (Gross/Net):</dt>
-    <dd>{{ vacancy.gross_net }}</dd>
+          <dt class="col-sm-5">Автор:</dt>
+          <dd class="col-sm-7">{{ vacancy.author }}</dd>
 
-    <dt>Формат работы:</dt>
-    <dd>{{ vacancy.work_format }}</dd>
+          <dt class="col-sm-5">Дата публикации:</dt>
+          <dd class="col-sm-7">{{ vacancy.date_posted }}</dd>
 
-    <dt>Дата публикации:</dt>
-    <dd>{{ vacancy.date_posted }}</dd>
+          <dt class="col-sm-5">Дата и время создания:</dt>
+          <dd class="col-sm-7">{{ vacancy.created_at }}</dd>
+        </dl>
+      </div>
 
-    <dt>Источник:</dt>
-    <dd>{{ vacancy.source }}</dd>
+      <!-- Правая колонка для описания вакансии как цитаты -->
+      <div class="col-md-6">
+        <h3>Описание вакансии</h3>
+        <blockquote class="blockquote">
+          <p class="mb-0"><small>{{ vacancy.description }}</small></p>
+        </blockquote>
+      </div>
+    </div>
+  </div>
 
-    <dt>Автор:</dt>
-    <dd>{{ vacancy.author }}</dd>
-
-    <dt>Описание вакансии:</dt>
-    <dd>{{ vacancy.description }}</dd>
-
-    <dt>Дата и время создания:</dt>
-    <dd>{{ vacancy.created_at }}</dd>
-  </dl>
-
-  <p><a href="{% url 'index' %}" class="back-link">Вернуться к списку вакансий</a></p>
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>

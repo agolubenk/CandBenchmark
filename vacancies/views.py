@@ -12,6 +12,7 @@ from django.views import View
 from .models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue
 from .serializers import VacancySerializer
 from .forms import GeminiInputForm, GeminiPromptForm
+from django.contrib import messages
 
 # Импортируем модуль для работы с Gemini API через SDK
 import google.generativeai as genai
@@ -512,8 +513,7 @@ def process_excel(request):
     """
     Шаг 3: Нажатие "Подтвердить" => прогоняем ВСЕ строки (кроме заголовков и пустых) через AI.
     """
-    # (код остался без изменений)
-    from django.contrib import messages
+    # (код остался без изменений
 
     rows_data = request.session.get('excel_rows')
     if not rows_data:

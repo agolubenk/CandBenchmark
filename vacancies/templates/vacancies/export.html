@@ -1,18 +1,22 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Экспорт вакансий</title>
-    <!-- Bootstrap для оформления -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <title>Экспорт вакансий</title>
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
 </head>
 <body>
-<div class="container mt-4">
+  <div class="container mt-4">
     <h1 class="mb-4">Экспорт вакансий в Excel</h1>
     <p>Нажмите кнопку ниже, чтобы скачать данные вакансий в формате Excel.</p>
     <a href="{% url 'export_vacancies' %}" class="btn btn-info">Экспортировать</a>
     <br><br>
     <a href="{% url 'index' %}" class="btn btn-secondary">Вернуться к списку вакансий</a>
-</div>
+  </div>
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 </body>
 </html>

@@ -1,86 +1,62 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Список вакансий</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
- <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f8f8f8;
-    }
-    @media (max-width: 600px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      th, td {
-        width: 100%;
-        box-sizing: border-box;
-      }
-    }
-    .btn-details {
-      background-color: #4CAF50;
-      color: #fff;
-      padding: 5px 10px;
-      text-decoration: none;
-      border-radius: 3px;
-    }
-    .nav-links {
-      margin-bottom: 20px;
-    }
-    .nav-links a {
-      text-decoration: none;
-      color: #007BFF;
-      margin-right: 15px;
-    }
-  </style>
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+
 </head>
 <body>
-  <h1>Список вакансий</h1>
-  <div class="nav-links">
-    <a href="{% url 'change_prompt' %}">Редактировать промпт для Gemini</a>
-    <a href="{% url 'gemini' %}">Добавить новое описание для Gemini</a>
-    <a href="{% url 'pivot_summary' %}">Посмотреть аналитику</a>
+  <div class="container mt-4">
+    <h1 class="mb-4">Список вакансий</h1>
+    <div class="mb-3">
+      <a href="{% url 'change_prompt' %}" class="btn btn-link">Редактировать промпт для Gemini</a>
+      <a href="{% url 'gemini' %}" class="btn btn-link">Добавить новое описание для Gemini</a>
+      <a href="{% url 'pivot_summary' %}" class="btn btn-link">Посмотреть аналитику</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Компания</th>
+            <th>Локация</th>
+            <th>Специализация</th>
+            <th>Грейд</th>
+            <th>ЗП от</th>
+            <th>ЗП до</th>
+            <th>Валюта</th>
+            <th>Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vac in vacancies %}
+          <tr>
+            <td>{{ vac.company }}</td>
+            <td>{{ vac.geo }}</td>
+            <td>{{ vac.specialization }}</td>
+            <td>{{ vac.grade }}</td>
+            <td>{{ vac.salary_min }}</td>
+            <td>{{ vac.salary_max }}</td>
+            <td>{{ vac.currency }}</td>
+            <td>
+              <a href="{% url 'vacancy_detail' vac.id %}" class="btn btn-success btn-sm">Подробнее</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">Нет вакансий для отображения.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Компания</th>
-        <th>Локация</th>
-        <th>Специализация</th>
-        <th>Грейд</th>
-        <th>ЗП от</th>
-        <th>ЗП до</th>
-        <th>Валюта</th>
-        <th>Действие</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for vac in vacancies %}
-      <tr>
-        <td>{{ vac.company }}</td>
-        <td>{{ vac.geo }}</td>
-        <td>{{ vac.specialization }}</td>
-        <td>{{ vac.grade }}</td>
-        <td>{{ vac.salary_min }}</td>
-        <td>{{ vac.salary_max }}</td>
-        <td>{{ vac.currency }}</td>
-        <td><a class="btn-details" href="{% url 'vacancy_detail' vac.id %}">Подробнее</a></td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="7">Нет вакансий для отображения.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 </body>
 </html>

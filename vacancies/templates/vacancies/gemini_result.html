@@ -1,25 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Gemini AI — Результаты</title>
+  <meta charset="UTF-8">
+  <title>Gemini AI — Результаты</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+
 </head>
 <body>
-    <a href="{% url 'gemini' %}">Вернуться к вводу</a> <a href="{% url 'index' %}">На главную</a>
-    <br>
-    <h1>Результаты обработки Gemini AI</h1>
+  <div class="container mt-4">
+    <!-- Навигационные ссылки -->
+    <div class="mb-3">
+      <a href="{% url 'gemini' %}" class="btn btn-link">Вернуться к вводу</a>
+      <a href="{% url 'index' %}" class="btn btn-link">На главную</a>
+    </div>
+
+    <h1 class="mb-4">Результаты обработки Gemini AI</h1>
+
     {% if results %}
-        {% for result in results %}
-            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-                <p><strong>Введённый текст:</strong> {{ result.input_text }}</p>
-                <p><strong>Обработанный текст:</strong> {{ result.processed_text }}</p>
-                <small>Время обработки: {{ result.created_at }}</small>
-            </div>
-        {% endfor %}
+      {% for result in results %}
+        <div class="card mb-3">
+          <div class="card-body">
+            <p class="card-text"><strong>Введённый текст:</strong> {{ result.input_text }}</p>
+            <p class="card-text"><strong>Обработанный текст:</strong> {{ result.processed_text }}</p>
+            <p class="card-text"><small class="text-muted">Время обработки: {{ result.created_at }}</small></p>
+          </div>
+        </div>
+      {% endfor %}
     {% else %}
-        <p>Пока что нет результатов.</p>
+      <p>Пока что нет результатов.</p>
     {% endif %}
-    <br>
-    <a href="{% url 'gemini' %}">Вернуться к вводу</a>
+
+    <div class="mt-3">
+      <a href="{% url 'gemini' %}" class="btn btn-link">Вернуться к вводу</a>
+    </div>
+  </div>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 </body>
 </html>

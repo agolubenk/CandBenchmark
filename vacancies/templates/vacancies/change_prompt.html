@@ -1,67 +1,37 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Изменить промпт для Gemini AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    .nav-links {
-      margin-bottom: 20px;
-    }
-    .nav-links a {
-      text-decoration: none;
-      color: #007BFF;
-      margin-right: 15px;
-    }
+    /* Центрирование контейнера по вертикали */
     .form-container {
-      width: 90%;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-    form p {
-      margin-bottom: 12px;
-    }
-    label {
-      font-weight: bold;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 10px;
-      background: #4CAF50;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #45a049;
+      min-height: 100vh;
     }
   </style>
 </head>
 <body>
-  <div class="form-container">
-    <h1>Изменить промпт для Gemini AI</h1>
-    <div class="nav-links">
-      <a href="{% url 'index' %}">Вернуться к списку вакансий</a>
-      <a href="{% url 'add_vacancy' %}">Добавить новую вакансию</a>
+  <div class="container form-container d-flex flex-column justify-content-center align-items-center">
+    <h1 class="mb-4 text-center">Изменить промпт для Gemini AI</h1>
+    <div class="nav-links mb-3 text-center">
+      <a href="{% url 'index' %}" class="btn btn-link">Вернуться к списку вакансий</a>
+      <a href="{% url 'gemini' %}" class="btn btn-link">Добавить новую вакансию</a>
     </div>
-    <form method="post">
+    <hr class="w-90">
+    <form method="post" class="w-100 justify-content-center">
+                  <div class="mb-3 text-center">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit">Сохранить</button>
+      <button type="submit" class="btn btn-lg btn-outline-primary mt-3">Сохранить</button>
+                  </div>
     </form>
   </div>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>
