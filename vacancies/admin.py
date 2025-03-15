@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import Vacancy, GeminiResult, GeminiPrompt
+from simple_history.admin import SimpleHistoryAdmin
 
 admin.site.register(GeminiResult)
-admin.site.register(GeminiPrompt)  # Регистрируем модель GeminiPrompt
+admin.site.register(GeminiPrompt, SimpleHistoryAdmin)  # Регистрируем модель GeminiPrompt
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):

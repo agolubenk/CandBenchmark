@@ -7,14 +7,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Подключение Bootstrap 5 CSS -->
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+      <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
+
   <style>
     /* Центрирование контейнера по вертикали */
     .form-container {
       min-height: 100vh;
     }
+    /* Добавляем отступ сверху для фиксированного nav-bar */
+    body {
+      padding-top: 70px; /* 70px - высота navbar, можно подкорректировать */
+    }
+    /* Контейнер для основного контента, скроллируется по вертикали и занимает оставшуюся высоту экрана */
+    .scrollable-content {
+      height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
+<!-- Фиксированный Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'index' %}"><i class="bi bi-cash-coin"></i> Market Benchmark</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'index' %}">Главная</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'change_prompt' %}">Редактировать промпт</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'gemini' %}">Добавить новое описание</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'export_vacancies' %}">Скачать все описания Excel</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'pivot_summary' %}">Посмотреть аналитику</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
   <div class="container form-container d-flex flex-column justify-content-center align-items-center">
     <h1 class="mb-4 text-center">Изменить промпт для Gemini AI</h1>
     <div class="nav-links mb-3 text-center">

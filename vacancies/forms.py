@@ -8,7 +8,10 @@ class GeminiInputForm(forms.Form):
     text = forms.CharField(widget=forms.Textarea, label="")
 
 class ExcelUploadForm(forms.Form):
-    excel_file = forms.FileField(label="Загрузите Excel-файл")
+    excel_file = forms.FileField(
+        label="",
+        widget=forms.FileInput(attrs={'class': 'form-control'})
+    )
 
 # Новая форма для изменения промпта Gemini AI
 class GeminiPromptForm(forms.ModelForm):

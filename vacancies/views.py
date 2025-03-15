@@ -40,29 +40,24 @@ def add_vacancy(request):
 def export_vacancies(request):
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.append([
-        'Company', 'Geo', 'Specialization', 'Grade',
-        'Salary Min', 'Salary Max', 'Bonus', 'Bonus Conditions',
-        'Currency', 'Gross/Net', 'Work Format', 'Date Posted',
-        'Source', 'Author'
-    ])
+
+    # Список полей в нужном порядке.
+    fields = [
+        'company', 'geo', 'specialization', 'grade',
+        'salary_min', 'salary_max', 'bonus', 'bonus_conditions',
+        'currency', 'gross_net', 'work_format', 'date_posted',
+        'source', 'author'
+    ]
+
+    # Формирование заголовков столбцов с использованием verbose_name из модели
+    header = [Vacancy._meta.get_field(field).verbose_name for field in fields]
+    ws.append(header)
+
+    # Заполнение данных вакансий
     for vac in Vacancy.objects.all():
-        ws.append([
-            vac.company,
-            vac.geo,
-            vac.specialization,
-            vac.grade,
-            vac.salary_min,
-            vac.salary_max,
-            vac.bonus,
-            vac.bonus_conditions,
-            vac.currency,
-            vac.gross_net,
-            vac.work_format,
-            vac.date_posted,
-            vac.source,
-            vac.author,
-        ])
+        row = [getattr(vac, field) for field in fields]
+        ws.append(row)
+
     response = HttpResponse(content_type="application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename="vacancies.xlsx"'
     wb.save(response)
