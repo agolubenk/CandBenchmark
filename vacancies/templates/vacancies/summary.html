@@ -7,12 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Подключение Bootstrap 5 CSS -->
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
-      <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
-
+  <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
   <style>
-    /* Добавляем отступ сверху для фиксированного nav-bar */
+    /* Добавляем отступ сверху для фиксированного navbar */
     body {
-      padding-top: 70px; /* 70px - высота navbar, можно подкорректировать */
+      padding-top: 70px;
     }
     /* Контейнер для основного контента, скроллируется по вертикали и занимает оставшуюся высоту экрана */
     .scrollable-content {
@@ -21,192 +20,278 @@
     }
     /* Ограничиваем высоту таблицы 60% от высоты экрана и включаем вертикальный скролл */
     .scrollable-table {
-      max-height: 60vh;
+      max-height: 51vh;
       overflow-y: auto;
     }
   </style>
 </head>
 <body>
-<!-- Фиксированный Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'index' %}"><i class="bi bi-cash-coin"></i> Market Benchmark</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
-      </div>
-      <div class="offcanvas-body">
-        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'index' %}">Главная</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'change_prompt' %}">Редактировать промпт</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'gemini' %}">Добавить новое описание</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'export_vacancies' %}">Скачать все описания Excel</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'pivot_summary' %}">Посмотреть аналитику</a>
-          </li>
-        </ul>
+  <!-- Фиксированный Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'index' %}">
+        <i class="bi bi-cash-coin"></i> Market Benchmark
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'index' %}">Главная</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'change_prompt' %}">Редактировать промпт</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'gemini' %}">Добавить новое описание</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'export_vacancies' %}">Скачать все описания Excel</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'pivot_summary' %}">Посмотреть аналитику</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
-  <div class="container mt-4">
-    <h1 class="mb-4">Сводная статистика по вакансиям</h1>
+  <div class="container mt-4 scrollable-content">
+    <h3 class="mb-4">Сводная статистика по вакансиям</h3>
 
-    <!-- Фильтр по specialization, grade и geo -->
-    <form method="GET" action="">
-      <div class="row g-3 align-items-end mb-4">
-        <div class="col-md-3">
-          <label for="specialization" class="form-label">Специализация:</label>
-          <input type="text" class="form-control" id="specialization" name="specialization" value="{{ spec_filter }}" placeholder="Например: Data Engineer">
-        </div>
-        <div class="col-md-3">
-          <label for="grade" class="form-label">Грейд:</label>
-          <input type="text" class="form-control" id="grade" name="grade" value="{{ grade_filter }}" placeholder="Например: Middle">
-        </div>
-        <div class="col-md-3">
-          <label for="geo" class="form-label">Локация:</label>
-          <input type="text" class="form-control" id="geo" name="geo" value="{{ geo_filter }}" placeholder="Например: Беларусь, Минск">
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">Применить фильтры</button>
-        </div>
-      </div>
-    </form>
-
-    <!-- Аккордеон для таблиц -->
-    <div class="accordion" id="accordionTables">
-      <!-- Аккордеон для таблицы (Gross) -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingGross">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGross" aria-expanded="true" aria-controls="collapseGross">
-            Таблица (Gross)
-          </button>
-        </h2>
-        <div id="collapseGross" class="accordion-collapse collapse show" aria-labelledby="headingGross" data-bs-parent="#accordionTables">
-          <div class="accordion-body">
-            <div class="table-responsive scrollable-table">
-              <table class="table table-bordered">
-                <thead class="table-light">
-                  <tr>
-                    <th>Гео</th>
-                    <th>Специализация</th>
-                    <th>Грейд</th>
-                    <th>Минимум (gross)</th>
-                    <th>Максимум (gross)</th>
-                    <th>Медиана рынка (gross)</th>
-                    <th>Валюта</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in results_gross %}
-                  <tr>
-                    <td>{{ row.geo }}</td>
-                    <td>{{ row.specialization }}</td>
-                    <td>{{ row.grade }}</td>
-                    <td>
-                      {% if row.min_median is not None %}
-                        {{ row.min_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if row.max_median is not None %}
-                        {{ row.max_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if row.market_median is not None %}
-                        {{ row.market_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                    <td>{{ row.currency }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+          <form>
+          <div class="row g-3 align-items-end mb-4">
+            <div class="col-md-3">
+              <label for="specialization" class="form-label">Специализация:</label>
+              <input type="text" class="form-control" id="specialization" name="specialization" placeholder="Например: Data Engineer">
+            </div>
+            <div class="col-md-3">
+              <label for="grade" class="form-label">Грейд:</label>
+              <input type="text" class="form-control" id="grade" name="grade" placeholder="Например: Middle">
+            </div>
+            <div class="col-md-3">
+              <label for="geo" class="form-label">Локация:</label>
+              <input type="text" class="form-control" id="geo" name="geo" placeholder="Например: Беларусь, Минск">
             </div>
           </div>
-        </div>
-      </div>
+        </form>
 
-      <!-- Аккордеон для таблицы (BYN) -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingBYN">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBYN" aria-expanded="false" aria-controls="collapseBYN">
-            Таблица (BYN)
-          </button>
-        </h2>
-        <div id="collapseBYN" class="accordion-collapse collapse" aria-labelledby="headingBYN" data-bs-parent="#accordionTables">
-          <div class="accordion-body">
-            <div class="table-responsive scrollable-table">
-              <table class="table table-bordered">
-                <thead class="table-light">
-                  <tr>
-                    <th>Гео</th>
-                    <th>Специализация</th>
-                    <th>Грейд</th>
-                    <th>Минимум (BYN)</th>
-                    <th>Максимум (BYN)</th>
-                    <th>Медиана рынка (BYN)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for row in results_byn %}
-                  <tr>
-                    <td>{{ row.geo }}</td>
-                    <td>{{ row.specialization }}</td>
-                    <td>{{ row.grade }}</td>
-                    <td>
-                      {% if row.byn_min_median is not None %}
-                        {{ row.byn_min_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if row.byn_max_median is not None %}
-                        {{ row.byn_max_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if row.byn_market_median is not None %}
-                        {{ row.byn_market_median }}
-                      {% else %}
-                        --
-                      {% endif %}
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+    <!-- Вкладки с заголовками, выровненными справа -->
+    <ul class="nav nav-tabs justify-content-end" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="summary-tab" data-bs-toggle="tab" href="#summary" role="tab" aria-controls="summary" aria-selected="true">Сводные данные</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="infographics-tab" data-bs-toggle="tab" href="#infographics" role="tab" aria-controls="infographics" aria-selected="false">Инфо-графики</a>
+      </li>
+    </ul>
+
+    <!-- Контент вкладок -->
+    <div class="tab-content mt-3" id="myTabContent">
+      <!-- Вкладка "Сводные данные" -->
+      <div class="tab-pane fade show active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+        <!-- Форма фильтров (клиентская фильтрация без перезагрузки страницы) -->
+
+        <!-- Аккордеон с таблицами -->
+        <div class="accordion" id="accordionTables">
+          <!-- Аккордеон для таблицы (Gross) -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingGross">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGross" aria-expanded="true" aria-controls="collapseGross">
+                <b>Таблица (Gross)</b>
+              </button>
+            </h2>
+            <div id="collapseGross" class="accordion-collapse collapse show" aria-labelledby="headingGross" data-bs-parent="#accordionTables">
+              <div class="accordion-body">
+                <div class="table-responsive scrollable-table">
+                  <div class="d-flex justify-content-end mb-3">
+                    <a href="#" id="exportGross" class="btn btn-sm btn-primary text-end">Скачать Excel (Gross)</a>
+                  </div>
+                  <table class="table table-bordered" id="tableGross">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Гео</th>
+                        <th>Специализация</th>
+                        <th>Грейд</th>
+                        <th>Минимум (gross)</th>
+                        <th>Максимум (gross)</th>
+                        <th>Медиана рынка (gross)</th>
+                        <th>Валюта</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in results_gross %}
+                      <tr>
+                        <td>{{ row.geo }}</td>
+                        <td>{{ row.specialization }}</td>
+                        <td>{{ row.grade }}</td>
+                        <td>
+                          {% if row.min_median is not None %}
+                            {{ row.min_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.max_median is not None %}
+                            {{ row.max_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.market_median is not None %}
+                            {{ row.market_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                        <td>{{ row.currency }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+
+          <!-- Аккордеон для таблицы (BYN) -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingBYN">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBYN" aria-expanded="false" aria-controls="collapseBYN">
+                  <b>Таблица (BYN)</b>
+              </button>
+            </h2>
+            <div id="collapseBYN" class="accordion-collapse collapse" aria-labelledby="headingBYN" data-bs-parent="#accordionTables">
+              <div class="accordion-body">
+                <div class="d-flex justify-content-end mb-3">
+                  <a href="#" id="exportBYN" class="btn btn-sm btn-primary">Скачать Excel (BYN)</a>
+                </div>
+                <div class="table-responsive scrollable-table">
+                  <table class="table table-bordered" id="tableBYN">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Гео</th>
+                        <th>Специализация</th>
+                        <th>Грейд</th>
+                        <th>Минимум (BYN)</th>
+                        <th>Максимум (BYN)</th>
+                        <th>Медиана рынка (BYN)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in results_byn %}
+                      <tr>
+                        <td>{{ row.geo }}</td>
+                        <td>{{ row.specialization }}</td>
+                        <td>{{ row.grade }}</td>
+                        <td>
+                          {% if row.byn_min_median is not None %}
+                            {{ row.byn_min_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.byn_max_median is not None %}
+                            {{ row.byn_max_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if row.byn_market_median is not None %}
+                            {{ row.byn_market_median }}
+                          {% else %}
+                            --
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- End of accordion -->
       </div>
-    </div><!-- End of accordion -->
-  </div>
+
+      <!-- Вкладка "Инфо-графики" с текстом-заглушкой -->
+      <div class="tab-pane fade" id="infographics" role="tabpanel" aria-labelledby="infographics-tab">
+
+        <p>Текст для заполнения</p>
+      </div>
+    </div><!-- End of tab content -->
+  </div><!-- End container -->
 
   <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
   <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <!-- Подключение SheetJS для экспорта Excel на стороне клиента -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Функция фильтрации таблиц по введённым значениям
+      const specializationInput = document.getElementById("specialization");
+      const gradeInput = document.getElementById("grade");
+      const geoInput = document.getElementById("geo");
+
+      function filterTables() {
+        const specializationFilter = specializationInput.value.toLowerCase();
+        const gradeFilter = gradeInput.value.toLowerCase();
+        const geoFilter = geoInput.value.toLowerCase();
+
+        // Перебираем все строки таблиц (для всех таблиц на странице)
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(row => {
+          const cells = row.getElementsByTagName("td");
+          if (cells.length >= 3) {
+            const cellGeo = cells[0].textContent.toLowerCase();
+            const cellSpecialization = cells[1].textContent.toLowerCase();
+            const cellGrade = cells[2].textContent.toLowerCase();
+            let visible = true;
+            if (specializationFilter && cellSpecialization.indexOf(specializationFilter) === -1) {
+              visible = false;
+            }
+            if (gradeFilter && cellGrade.indexOf(gradeFilter) === -1) {
+              visible = false;
+            }
+            if (geoFilter && cellGeo.indexOf(geoFilter) === -1) {
+              visible = false;
+            }
+            row.style.display = visible ? "" : "none";
+          }
+        });
+      }
+
+      specializationInput.addEventListener("input", filterTables);
+      gradeInput.addEventListener("input", filterTables);
+      geoInput.addEventListener("input", filterTables);
+
+      // Обработчик экспорта Excel для таблицы Gross
+      document.getElementById("exportGross").addEventListener("click", function(e) {
+        e.preventDefault();
+        const table = document.getElementById("tableGross");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Gross" });
+        XLSX.writeFile(wb, "vacancies_gross.xlsx");
+      });
+
+      // Обработчик экспорта Excel для таблицы BYN
+      document.getElementById("exportBYN").addEventListener("click", function(e) {
+        e.preventDefault();
+        const table = document.getElementById("tableBYN");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "BYN" });
+        XLSX.writeFile(wb, "vacancies_byn.xlsx");
+      });
+    });
+  </script>
 </body>
 </html>
