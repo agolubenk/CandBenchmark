@@ -1,65 +1,54 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Добавить вакансию</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {
-          font-family: Arial, sans-serif;
-      }
-      .form-container {
-          width: 90%;
-          max-width: 600px;
-          margin: 0 auto;
-      }
-      form {
-          display: flex;
-          flex-direction: column;
-      }
-      form p {
-          margin-bottom: 12px;
-      }
-      label {
-          font-weight: bold;
-      }
-      input, textarea, select {
-          width: 100%;
-          padding: 8px;
-          margin-top: 4px;
-          box-sizing: border-box;
-      }
-      button {
-          padding: 10px;
-          background: #4CAF50;
-          color: #fff;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-      }
-      button:hover {
-          background: #45a049;
-      }
-      .back-link {
-          margin-top: 20px;
-          display: inline-block;
-          background-color: #007BFF;
-          color: white;
-          padding: 8px 15px;
-          text-decoration: none;
-          border-radius: 4px;
-      }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h1>Добавить вакансию</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Добавить вакансию</button>
-        </form>
-        <p><a href="{% url 'index' %}" class="back-link">Вернуться к списку вакансий</a></p>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Добавить вакансию{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        width: 90%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+    form p {
+        margin-bottom: 12px;
+    }
+    label {
+        font-weight: bold;
+    }
+    input, textarea, select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        box-sizing: border-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .back-link {
+        margin-top: 20px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="mb-4">Добавить вакансию</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Добавить вакансию
+        </button>
+    </form>
+    <p>
+        <a href="{% url 'index' %}" class="btn btn-primary back-link">
+            <i class="bi bi-arrow-left"></i> Вернуться к списку вакансий
+        </a>
+    </p>
+</div>
+{% endblock %}

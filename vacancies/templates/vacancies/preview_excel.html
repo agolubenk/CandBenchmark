@@ -1,97 +1,65 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <title>Предпросмотр Excel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Подключение Bootstrap 5 CSS -->
-  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
-      <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
+{% extends 'base.html' %}
 
-  <style>
-    /* Добавляем отступ сверху для фиксированного nav-bar */
-    body {
-      padding-top: 70px; /* 70px - высота navbar, можно подкорректировать */
-    }
-    /* Контейнер для основного контента, скроллируется по вертикали и занимает оставшуюся высоту экрана */
-    .scrollable-content {
-      height: calc(100vh - 70px);
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-  <!-- Фиксированный Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: #cfe2ff;">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'index' %}">
-        <i class="bi bi-cash-coin"></i> Market Benchmark
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'index' %}"><i class="bi bi-house"></i> Главная</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'change_prompt' %}"><i class="bi bi-pencil-square"></i> Редактировать промпт</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="{% url 'gemini' %}"><i class="bi bi-plus-square-dotted"></i> Добавить новое описание</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'export_vacancies' %}"><i class="bi bi-file-earmark-excel"></i> Скачать все описания</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'pivot_summary' %}"><i class="bi bi-graph-up"></i> Посмотреть аналитику</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin:index' %}""><i class="bi bi-wrench-adjustable-circle"></i> Админ-панель</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>
+{% block title %}Предпросмотр Excel{% endblock %}
 
-  <div class="container mt-4">
+{% block extra_css %}
+<style>
+    .table-container {
+        margin-top: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
     <h1 class="mb-4">Предпросмотр данных из Excel</h1>
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <thead class="table-light">
-          <tr>
-            {% for head in headers %}
-              <th>{{ head }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in data_rows %}
-            <tr>
-              {% for cell in row %}
-                <td>{{ cell }}</td>
-              {% endfor %}
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        {% for head in headers %}
+                            <th>{{ head }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data_rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>{{ cell }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <form method="post" action="{% url 'process_excel' %}">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-primary">Подтвердить и отправить в AI</button>
-    </form>
-  </div>
 
-  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
-</body>
-</html>
+    <div class="action-buttons">
+        <a href="{% url 'upload_excel' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <form method="post" action="{% url 'process_excel' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-robot"></i> Подтвердить и отправить в AI
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

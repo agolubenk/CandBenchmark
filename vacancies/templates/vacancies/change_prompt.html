@@ -1,88 +1,45 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Изменить промпт для Gemini AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Подключение Bootstrap 5 CSS -->
-  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
-      <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
+{% extends 'base.html' %}
 
-  <style>
-    /* Центрирование контейнера по вертикали */
+{% block title %}Изменить промпт для Gemini AI{% endblock %}
+
+{% block extra_css %}
+<style>
     .form-container {
-      min-height: 100vh;
+        min-height: calc(100vh - 100px); /* Учитываем высоту navbar */
     }
-    /* Добавляем отступ сверху для фиксированного nav-bar */
-    body {
-      padding-top: 70px; /* 70px - высота navbar, можно подкорректировать */
+    form {
+        max-width: 800px;
+        margin: 0 auto;
     }
-    /* Контейнер для основного контента, скроллируется по вертикали и занимает оставшуюся высоту экрана */
-    .scrollable-content {
-      height: calc(100vh - 70px);
-      overflow-y: auto;
+    textarea {
+        min-height: 200px;
     }
-  </style>
-</head>
-<body>
-  <!-- Фиксированный Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: #cfe2ff;">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'index' %}">
-        <i class="bi bi-cash-coin"></i> Market Benchmark
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'index' %}"><i class="bi bi-house"></i> Главная</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="{% url 'change_prompt' %}"><i class="bi bi-pencil-square"></i> Редактировать промпт</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'gemini' %}"><i class="bi bi-plus-square-dotted"></i> Добавить новое описание</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'export_vacancies' %}"><i class="bi bi-file-earmark-excel"></i> Скачать все описания</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'pivot_summary' %}"><i class="bi bi-graph-up"></i> Посмотреть аналитику</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin:index' %}""><i class="bi bi-wrench-adjustable-circle"></i> Админ-панель</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>
+</style>
+{% endblock %}
 
-  <div class="container form-container d-flex flex-column justify-content-center align-items-center">
+{% block content %}
+<div class="form-container d-flex flex-column justify-content-center align-items-center">
     <h1 class="mb-4 text-center">Изменить промпт для Gemini AI</h1>
+    
     <div class="nav-links mb-3 text-center">
-      <a href="{% url 'index' %}" class="btn btn-link">Вернуться к списку вакансий</a>
-      <a href="{% url 'gemini' %}" class="btn btn-link">Добавить новую вакансию</a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> К списку вакансий
+        </a>
+        <a href="{% url 'gemini' %}" class="btn btn-outline-primary">
+            <i class="bi bi-plus-square"></i> Добавить новую вакансию
+        </a>
     </div>
-    <hr class="w-90">
-    <form method="post" class="w-100 justify-content-center">
-                  <div class="mb-3 text-center">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-lg btn-outline-primary mt-3">Сохранить</button>
-                  </div>
+    
+    <hr class="w-100 mb-4">
+    
+    <form method="post" class="w-100">
+        <div class="mb-3 text-center">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-lg btn-outline-primary mt-3">
+                <i class="bi bi-save"></i> Сохранить
+            </button>
+        </div>
     </form>
-  </div>
-
-  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-</body>
-</html>
+</div>
+{% endblock %}

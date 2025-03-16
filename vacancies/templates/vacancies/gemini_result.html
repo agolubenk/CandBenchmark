@@ -1,97 +1,76 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Gemini AI — Результаты</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Подключение Bootstrap 5 CSS -->
-  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
-      <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
+{% extends 'base.html' %}
 
-  <style>
-    /* Добавляем отступ сверху для фиксированного nav-bar */
-    body {
-      padding-top: 70px; /* 70px - высота navbar, можно подкорректировать */
-    }
-    /* Контейнер для основного контента, скроллируется по вертикали и занимает оставшуюся высоту экрана */
-    .scrollable-content {
-      height: calc(100vh - 70px);
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-  <!-- Фиксированный Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: #cfe2ff;">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'index' %}">
-        <i class="bi bi-cash-coin"></i> Market Benchmark
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'index' %}"><i class="bi bi-house"></i> Главная</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'change_prompt' %}"><i class="bi bi-pencil-square"></i> Редактировать промпт</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="{% url 'gemini' %}"><i class="bi bi-plus-square-dotted"></i> Добавить новое описание</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'export_vacancies' %}"><i class="bi bi-file-earmark-excel"></i> Скачать все описания</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'pivot_summary' %}"><i class="bi bi-graph-up"></i> Посмотреть аналитику</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin:index' %}""><i class="bi bi-wrench-adjustable-circle"></i> Админ-панель</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>
+{% block title %}Gemini AI — Результаты{% endblock %}
 
-  <div class="container mt-4">
+{% block extra_css %}
+<style>
+    .result-card {
+        transition: transform 0.2s;
+    }
+    .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .input-text {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    .processed-text {
+        background-color: #e9ecef;
+        border-left: 4px solid #198754;
+        padding: 15px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
     <!-- Навигационные ссылки -->
-    <div class="mb-3">
-      <a href="{% url 'gemini' %}" class="btn btn-link">Вернуться к вводу</a>
-      <a href="{% url 'index' %}" class="btn btn-link">На главную</a>
+    <div class="mb-4 d-flex gap-3">
+        <a href="{% url 'gemini' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Вернуться к вводу
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i> На главную
+        </a>
     </div>
 
     <h1 class="mb-4">Результаты обработки Gemini AI</h1>
 
     {% if results %}
-      {% for result in results %}
-        <div class="card mb-3">
-          <div class="card-body">
-            <p class="card-text"><strong>Введённый текст:</strong> {{ result.input_text }}</p>
-            <p class="card-text"><strong>Обработанный текст:</strong> {{ result.processed_text }}</p>
-            <p class="card-text"><small class="text-muted">Время обработки: {{ result.created_at }}</small></p>
-          </div>
-        </div>
-      {% endfor %}
+        {% for result in results %}
+            <div class="card mb-4 result-card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="card-title">Введённый текст:</h5>
+                        <div class="input-text">
+                            {{ result.input_text }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="card-title">Обработанный текст:</h5>
+                        <div class="processed-text">
+                            {{ result.processed_text }}
+                        </div>
+                    </div>
+                    
+                    <p class="card-text text-end">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 
+                            Время обработки: {{ result.created_at }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
     {% else %}
-      <p>Пока что нет результатов.</p>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Пока что нет результатов.
+        </div>
     {% endif %}
-
-    <div class="mt-3">
-      <a href="{% url 'gemini' %}" class="btn btn-link">Вернуться к вводу</a>
-    </div>
-  </div>
-
-  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
-</body>
-</html>
+</div>
+{% endblock %}
