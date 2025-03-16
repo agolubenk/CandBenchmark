@@ -150,4 +150,4 @@ class Command(BaseCommand):
             current_index = (current_index + 1) % query_count
 
             self.stdout.write(self.style.WARNING("Ожидание 60 секунд перед следующим запросом..."))
-            time.sleep(60)
+            time.sleep(4500)
