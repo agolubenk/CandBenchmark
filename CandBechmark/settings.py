@@ -126,7 +126,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # Если файлы статических ресурсов расположены в дополнительных папках:
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "vacancies/static",
     # можно добавить и другие директории, если нужно
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
