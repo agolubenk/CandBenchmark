@@ -62,8 +62,9 @@ ROOT_URLCONF = 'CandBechmark.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'vacancies/templates']
-        ,
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,9 +139,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Настройки для брокера и бекенда результатов (используя Redis)
+# Настройки Celery
 CELERY_BROKER_URL = f'redis://{os.getenv("REDIS_HOST")}:6379/0'
 CELERY_RESULT_BACKEND = f'redis://{os.getenv("REDIS_HOST")}:6379/0'
+
+# Добавим дополнительные настройки
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'  # Используйте ваш часовой пояс
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 минут максимальное время выполнения задачи
 
 #GOOGLE_API_KEY = userdata.get.os.getenv('GOOGLE_API_KEY')
 

@@ -106,6 +106,19 @@ def execute_batches():
 
 
 @shared_task
+def process_hhru_data(vacancy_text):
+    """
+    Задача для обработки данных, полученных из скрапера HH.ru
+    """
+    try:
+        TaskQueue.objects.create(data=vacancy_text)
+        logger.info("Данные вакансии с HH.ru успешно добавлены в очередь")
+    except Exception as e:
+        logger.exception("Ошибка при добавлении данных HH.ru в очередь: %s", e)
+    return "Данные HH.ru добавлены в очередь"
+
+
+@shared_task
 def gemini_worker(tasks):
     gemini_prompt_obj = GeminiPrompt.objects.first()
 
