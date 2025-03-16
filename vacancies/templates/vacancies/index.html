@@ -23,11 +23,12 @@
     </div>
   </div>
 
-  <!-- Контейнер с таблицей (скроллируемый) -->
+  <!-- Контейнер с таблицей -->
   <div class="table-container">
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover mb-0">
-        <thead class="table-light table-header">
+    <!-- Фиксированный заголовок таблицы -->
+    <div class="fixed-header">
+      <table class="table table-bordered mb-0">
+        <thead class="table-light">
           <tr>
             <th>Компания</th>
             <th>Локация</th>
@@ -39,6 +40,12 @@
             <th>Действие</th>
           </tr>
         </thead>
+      </table>
+    </div>
+    
+    <!-- Скроллируемое тело таблицы -->
+    <div class="table-scroll">
+      <table class="table table-bordered table-hover mb-0">
         <tbody>
           {% for vac in vacancies %}
           <tr>
@@ -145,45 +152,46 @@
     z-index: 1000;
     border-bottom: 1px solid #dee2e6;
   }
-
   /* Стили для контейнера таблицы */
   .table-container {
     margin-top: 40px;
     padding-bottom: 45px;
-    overflow-y: auto;
+    position: relative;
     height: calc(100vh - 101px);
-    position: relative;
   }
 
-  /* Стили для фиксированного заголовка таблицы */
-  .table-header {
+  .fixed-header {
     position: sticky;
-    top: 0;
+    top: 40px;
     background: white;
     z-index: 999;
+    border-bottom: 1px solid #dee2e6;
   }
 
-  /* Стили для ячеек заголовка */
-  .table-header th {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 999;
+  .table-scroll {
+    overflow-y: auto;
+    height: calc(100% - 42px); /* высота контейнера минус высота заголовка */
   }
 
-  /* Добавляем тень для визуального разделения */
-  .table-header::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 1px;
-    background: #dee2e6;
+  /* Выравнивание ширины колонок */
+  .fixed-header table,
+  .table-scroll table {
+    table-layout: fixed;
+    width: 100%;
   }
 
-  .table-responsive {
-    position: relative;
+  .fixed-header th,
+  .table-scroll td {
+    width: 12.5%; /* 100% / 8 колонок */
+  }
+
+  /* Убираем двойную рамку между заголовком и телом */
+  .table-scroll .table {
+    border-top: none;
+  }
+
+  .table-scroll .table tbody tr:first-child td {
+    border-top: none;
   }
 
   /* Медиа-запрос для мобильных устройств */
@@ -192,13 +200,8 @@
       padding: 0.25rem 1rem;
     }
 
-    .table-container {
-      margin-top: 70px;
-    }
-
-    /* Уменьшаем отступ у заголовка на мобильных */
-    .col-md-4.mb-3.mb-md-0 {
-      margin-bottom: 0.25rem !important;
+    .fixed-header {
+      top: 70px;
     }
   }
 
@@ -213,11 +216,11 @@
     border-top: 1px solid #dee2e6;
     z-index: 1000;
   }
-  
+
   .table {
     margin-bottom: 0;
   }
-  
+
   tbody tr:last-child td {
     border-bottom: none;
   }
@@ -236,7 +239,7 @@
     .pagination .page-link {
       padding: 0.375rem 0.5rem;
     }
-    
+
     /* Уменьшаем отступы в пагинации на мобильных */
     .pagination-container {
       padding: 0.25rem;

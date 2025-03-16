@@ -5,14 +5,14 @@
 {% block extra_css %}
 <style>
     .scrollable-table {
-        max-height: 51vh;
+        max-height: 50vh;
         overflow-y: auto;
         border-radius: 8px;
         box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
     .filter-form {
         background-color: #f8f9fa;
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 8px;
         margin-bottom: 2rem;
     }
@@ -26,7 +26,7 @@
         transform: translateY(-2px);
     }
     .tab-content {
-        padding: 1.5rem;
+        padding: 1rem;
         background-color: #fff;
         border: 1px solid #dee2e6;
         border-top: none;
@@ -96,7 +96,7 @@
 {% block content %}
 <!-- Весь ваш существующий HTML код из body, начиная с container -->
 <div class="container">
-    <h3 class="mb-4">Сводная статистика по вакансиям</h3>
+    <h3 class="mb-2">Сводная статистика по вакансиям</h3>
 
     <form class="filter-form">
         <div class="row g-3 align-items-end">
@@ -126,7 +126,7 @@
     </ul>
 
     <!-- Контент вкладок -->
-    <div class="tab-content mt-3" id="myTabContent">
+    <div class="tab-content" id="myTabContent">
         <!-- Вкладка "Сводные данные" -->
         <div class="tab-pane fade show active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
             <!-- Форма фильтров (клиентская фильтрация без перезагрузки страницы) -->
@@ -143,8 +143,8 @@
                     <div id="collapseGross" class="accordion-collapse collapse show" aria-labelledby="headingGross" data-bs-parent="#accordionTables">
                         <div class="accordion-body">
                             <div class="table-responsive scrollable-table">
-                                <div class="d-flex justify-content-end mb-3">
-                                    <a href="#" id="exportGross" class="btn btn-sm btn-primary text-end">Скачать Excel (Gross) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                                <div class="d-flex justify-content-end">
+                                    <a href="#" id="exportGross" class="btn btn-primary d w-100">Скачать Excel (Gross) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
                                 </div>
                                 <table class="table table-bordered" id="tableGross">
                                     <thead class="table-light">
@@ -205,8 +205,8 @@
                     <div id="collapseBYN" class="accordion-collapse collapse" aria-labelledby="headingBYN" data-bs-parent="#accordionTables">
                         <div class="accordion-body">
                             <div class="table-responsive scrollable-table">
-                            <div class="d-flex justify-content-end mb-3">
-                                <a href="#" id="exportBYN" class="btn btn-sm btn-primary">Скачать Excel (BYN) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                            <div class="d-flex">
+                                <a href="#" id="exportBYN" class="btn w-100 btn-primary">Скачать Excel (BYN) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
                             </div>
 
                                 <table class="table table-bordered" id="tableBYN">
