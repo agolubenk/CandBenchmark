@@ -29,6 +29,10 @@ class Vacancy(models.Model):
     def __str__(self):
         return f"{self.company} ({self.grade} - {self.currency})"
 
+    class Meta:
+        verbose_name = "Сохраненная вакансия"
+        verbose_name_plural = "Сохраненные вакансии"
+
 
 class GeminiResult(models.Model):
     input_text = models.TextField()
@@ -38,6 +42,9 @@ class GeminiResult(models.Model):
     def __str__(self):
         return f"Result from {self.created_at}"
 
+    class Meta:
+        verbose_name = "Результат обработки AI с сайта"
+        verbose_name_plural = "Результаты обработки AI с сайта"
 
 # Новая модель для хранения кастомного промпта для Gemini AI
 class GeminiPrompt(models.Model):
@@ -51,6 +58,9 @@ class GeminiPrompt(models.Model):
         # Выводим первые 50 символов промпта
         return self.prompt_text[:50]
 
+    class Meta:
+        verbose_name = "Промпт для AI"
+        verbose_name_plural = "Промпт для AI"
 
 class TaskQueue(models.Model):
     data = models.TextField()

@@ -37,3 +37,11 @@ services:
     command: python bot.py
     depends_on:
       - app
+  scraper:
+    <<: *default-python
+    command: python manage.py scrape_hhru
+    depends_on:
+      - app
+      - celery-beat
+      - celery-worker
+    restart: always
