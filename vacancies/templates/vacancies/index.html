@@ -3,41 +3,244 @@
 {% block title %}Список вакансий{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Список вакансий</h1>
-<div class="table-responsive">
-  <table class="table table-bordered table-hover">
-    <thead class="table-light">
-      <tr>
-        <th>Компания</th>
-        <th>Локация</th>
-        <th>Специализация</th>
-        <th>Грейд</th>
-        <th>ЗП от</th>
-        <th>ЗП до</th>
-        <th>Валюта</th>
-        <th>Действие</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for vac in vacancies %}
-      <tr>
-        <td>{{ vac.company }}</td>
-        <td>{{ vac.geo }}</td>
-        <td>{{ vac.specialization }}</td>
-        <td>{{ vac.grade }}</td>
-        <td>{{ vac.salary_min }}</td>
-        <td>{{ vac.salary_max }}</td>
-        <td>{{ vac.currency }}</td>
-        <td>
-          <a href="{% url 'vacancy_detail' vac.id %}" class="btn btn-outline-info btn-sm"><i class="bi bi-eye-fill"></i> Info</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8" class="text-center">Нет вакансий для отображения.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="d-flex flex-column vh-100">
+  <!-- Фиксированная верхняя секция с заголовком и поиском -->
+  <div class="header-container">
+    <div class="row align-items-center">
+      <div class="col-md-4 mb-3 mb-md-0">
+        <h1 class="mb-0">Список вакансий</h1>
+      </div>
+      <div class="col-md-8">
+        <form method="GET" action="{% url 'index' %}" class="d-flex gap-2">
+          <input type="text" 
+                 name="search" 
+                 class="form-control" 
+                 placeholder="Поиск по вакансиям..." 
+                 value="{{ request.GET.search }}">
+          <button type="submit" class="btn btn-primary">Поиск</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контейнер с таблицей (скроллируемый) -->
+  <div class="table-container">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover mb-0">
+        <thead class="table-light table-header">
+          <tr>
+            <th>Компания</th>
+            <th>Локация</th>
+            <th>Специализация</th>
+            <th>Грейд</th>
+            <th>ЗП от</th>
+            <th>ЗП до</th>
+            <th>Валюта</th>
+            <th>Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vac in vacancies %}
+          <tr>
+            <td>{{ vac.company }}</td>
+            <td>{{ vac.geo }}</td>
+            <td>{{ vac.specialization }}</td>
+            <td>{{ vac.grade }}</td>
+            <td>{{ vac.salary_min }}</td>
+            <td>{{ vac.salary_max }}</td>
+            <td>{{ vac.currency }}</td>
+            <td>
+              <a href="{% url 'vacancy_detail' vac.id %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-eye-fill"></i> Info
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">Нет вакансий для отображения.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Фиксированная пагинация внизу -->
+  {% if vacancies.has_other_pages %}
+  <div class="pagination-container">
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center mb-0">
+        {% if vacancies.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+          </li>
+        {% endif %}
+
+        <!-- Первая страница всегда видна -->
+        {% if vacancies.number > 3 %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">1</a>
+          </li>
+          {% if vacancies.number > 4 %}
+            <li class="page-item disabled d-none d-md-block">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+        {% endif %}
+
+        {% for i in vacancies.paginator.page_range %}
+          {% if i > vacancies.number|add:'-3' and i < vacancies.number|add:'3' %}
+            {% if vacancies.number == i %}
+              <li class="page-item active">
+                <span class="page-link">{{ i }}</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i }}</a>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+
+        <!-- Последняя страница всегда видна -->
+        {% if vacancies.number < vacancies.paginator.num_pages|add:'-2' %}
+          {% if vacancies.number < vacancies.paginator.num_pages|add:'-3' %}
+            <li class="page-item disabled d-none d-md-block">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ vacancies.paginator.num_pages }}</a>
+          </li>
+        {% endif %}
+
+        {% if vacancies.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&raquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
 </div>
+
+<style>
+  /* Стили для фиксированной верхней секции */
+  .header-container {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.25rem 1rem;
+    z-index: 1000;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  /* Стили для контейнера таблицы */
+  .table-container {
+    margin-top: 40px;
+    padding-bottom: 45px;
+    overflow-y: auto;
+    height: calc(100vh - 101px);
+    position: relative;
+  }
+
+  /* Стили для фиксированного заголовка таблицы */
+  .table-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 999;
+  }
+
+  /* Стили для ячеек заголовка */
+  .table-header th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 999;
+  }
+
+  /* Добавляем тень для визуального разделения */
+  .table-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: #dee2e6;
+  }
+
+  .table-responsive {
+    position: relative;
+  }
+
+  /* Медиа-запрос для мобильных устройств */
+  @media (max-width: 768px) {
+    .header-container {
+      padding: 0.25rem 1rem;
+    }
+
+    .table-container {
+      margin-top: 70px;
+    }
+
+    /* Уменьшаем отступ у заголовка на мобильных */
+    .col-md-4.mb-3.mb-md-0 {
+      margin-bottom: 0.25rem !important;
+    }
+  }
+
+  /* Стили для пагинации */
+  .pagination-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.5rem;
+    border-top: 1px solid #dee2e6;
+    z-index: 1000;
+  }
+  
+  .table {
+    margin-bottom: 0;
+  }
+  
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Обновленные стили для пагинации */
+  .pagination {
+    margin-bottom: 0;
+    flex-wrap: nowrap;
+  }
+
+  .page-link {
+    padding: 0.375rem 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .pagination .page-link {
+      padding: 0.375rem 0.5rem;
+    }
+    
+    /* Уменьшаем отступы в пагинации на мобильных */
+    .pagination-container {
+      padding: 0.25rem;
+    }
+  }
+</style>
 {% endblock %}

@@ -11,6 +11,9 @@ from django.contrib import messages
 from statistics import median
 from collections import defaultdict
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+
 # Настраиваем логирование
 logger = logging.getLogger(__name__)
 
@@ -21,8 +24,38 @@ def vacancy_detail(request, vacancy_id):
 
 
 def index(request):
-    vacancies = Vacancy.objects.all()
-    return render(request, 'vacancies/index.html', {'vacancies': vacancies})
+    search_query = request.GET.get('search', '')
+    
+    if search_query:
+        vacancies = Vacancy.objects.filter(
+            Q(company__icontains=search_query) |
+            Q(geo__icontains=search_query) |
+            Q(specialization__icontains=search_query) |
+            Q(grade__icontains=search_query) |
+            Q(description__icontains=search_query)
+        ).order_by('-date_posted')
+    else:
+        vacancies = Vacancy.objects.all().order_by('-date_posted')
+    
+    # Настраиваем пагинацию
+    paginator = Paginator(vacancies, 50)  # 50 вакансий на страницу
+    page = request.GET.get('page')
+    
+    try:
+        vacancies = paginator.get_page(page)
+    except PageNotAnInteger:
+        # Если страница не является целым числом, возвращаем первую страницу
+        vacancies = paginator.get_page(1)
+    except EmptyPage:
+        # Если страница больше максимальной, возвращаем последнюю страницу
+        vacancies = paginator.get_page(paginator.num_pages)
+    
+    context = {
+        'vacancies': vacancies,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'vacancies/index.html', context)
 
 
 def add_vacancy(request):
