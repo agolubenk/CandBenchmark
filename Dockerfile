@@ -1,14 +1,14 @@
-FROM python:3.13.2-bookworm
+FROM python:3.9
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV REDIS_HOST redis
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN python3 manage.py collectstatic --noinput
 
-RUN python manage.py migrate
+EXPOSE 8000
+
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

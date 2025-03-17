@@ -7,6 +7,9 @@ x-default-python:
     - ./db.sqlite3:/app/db.sqlite3
     - .:/app
   restart: always
+  environment:
+    - DJANGO_SETTINGS_MODULE=CandBechmark.settings
+    - PYTHONUNBUFFERED=1
 
 services:
   redis:
@@ -16,32 +19,41 @@ services:
       - "6379:6379"
   celery-worker:
     <<: *default-python
-    command: python -m celery -A CandBechmark worker -l info
+    command: python3 -m celery -A CandBechmark worker -l info
     depends_on:
       - redis
   celery-beat:
     <<: *default-python
-    command: python -m celery -A CandBechmark beat -l info
+    command: python3 -m celery -A CandBechmark beat -l info
     depends_on:
       - redis
-  app:
+  web:
     <<: *default-python
-    command: python manage.py runserver 0.0.0.0:8000
-    depends_on:
-      - celery-beat
-      - celery-worker
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py collectstatic --noinput &&
+             python3 manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
-  bot:
-    <<: *default-python
-    command: python bot.py
     depends_on:
-      - app
-  scraper:
-    <<: *default-python
-    command: python manage.py scrape_hhru
-    depends_on:
-      - app
+      - redis
       - celery-beat
       - celery-worker
-    restart: always
+  bot:
+    <<: *default-python
+    command: python3 bot.py
+    depends_on:
+      - web
+  scraper:
+    <<: *default-python
+    command: python3 manage.py scrape_hhru
+    depends_on:
+      - web
+      - celery-beat
+      - celery-worker
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=your_db_name
+      - POSTGRES_USER=your_user
+      - POSTGRES_PASSWORD=your_password
