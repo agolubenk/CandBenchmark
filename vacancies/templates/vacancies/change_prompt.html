@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Изменить промпт для Gemini AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        min-height: calc(100vh - 100px); /* Учитываем высоту navbar */
+    }
+    form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    textarea {
+        min-height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container d-flex flex-column justify-content-center align-items-center">
+    <h1 class="mb-4 text-center">Изменить промпт для Gemini AI</h1>
+    
+    <div class="nav-links mb-3 text-center">
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> К списку вакансий
+        </a>
+        <a href="{% url 'gemini' %}" class="btn btn-outline-primary">
+            <i class="bi bi-plus-square"></i> Добавить новую вакансию
+        </a>
+    </div>
+    
+    <hr class="w-100 mb-4">
+    
+    <form method="post" class="w-100">
+        <div class="mb-3 text-center">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-lg btn-outline-primary mt-3">
+                <i class="bi bi-save"></i> Сохранить
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

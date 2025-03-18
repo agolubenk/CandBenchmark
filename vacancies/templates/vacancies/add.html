@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Добавить вакансию{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        width: 90%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+    form p {
+        margin-bottom: 12px;
+    }
+    label {
+        font-weight: bold;
+    }
+    input, textarea, select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        box-sizing: border-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .back-link {
+        margin-top: 20px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="mb-4">Добавить вакансию</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Добавить вакансию
+        </button>
+    </form>
+    <p>
+        <a href="{% url 'index' %}" class="btn btn-primary back-link">
+            <i class="bi bi-arrow-left"></i> Вернуться к списку вакансий
+        </a>
+    </p>
+</div>
+{% endblock %}

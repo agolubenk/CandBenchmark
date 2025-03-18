@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Новый запрос для Gemini{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    textarea {
+        min-height: 200px;
+    }
+    .divider {
+        position: relative;
+        text-align: center;
+        margin: 30px 0;
+    }
+    .divider::before,
+    .divider::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 45%;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="mb-4 text-center">Новый запрос для Gemini</h1>
+    
+    <div class="d-flex gap-3 mb-3 justify-content-center">
+        <a href="{% url 'change_prompt' %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil-square"></i> Редактировать промпт
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i> На главную
+        </a>
+    </div>
+    
+    <hr>
+    
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="mb-3 text-center">
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary btn-lg w-75">
+                <i class="bi bi-send"></i> Отправить запрос
+            </button>
+        </div>
+    </form>
+    
+    <div class="divider">
+        <span class="bg-white px-3">или</span>
+    </div>
+    
+    <div class="text-center">
+        <a href="{% url 'upload_excel' %}" class="btn btn-success btn-lg w-75">
+            <i class="bi bi-file-earmark-excel"></i> Загрузить Excel
+        </a>
+    </div>
+</div>
+{% endblock %}

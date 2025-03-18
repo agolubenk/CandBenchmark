@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали вакансии - {{ vacancy.company }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .description-block {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd;
+    }
+    dt {
+        color: #6c757d;
+    }
+    .back-button {
+        transition: all 0.3s ease;
+    }
+    .back-button:hover {
+        transform: translateX(-3px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Заголовок с кнопкой "назад" в синем кружке -->
+<div class="d-flex align-items-center mb-4">
+    <a href="{% url 'index' %}" 
+       class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center me-3 back-button" 
+       style="width: 40px; height: 40px;">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2 class="mb-0">
+        Детали вакансии 
+        {% if vacancy.grade %}
+        <strong>{{ vacancy.grade }}</strong>
+        {% endif %}
+        {{ vacancy.specialization }}
+    </h2>
+</div>
+
+<hr>
+
+<!-- Строка с двумя колонками -->
+<div class="row">
+    <!-- Левая колонка с подробностями -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Основная информация</h3>
+                <dl class="row">
+                    <dt class="col-sm-5">Компания:</dt>
+                    <dd class="col-sm-7">{{ vacancy.company }}</dd>
+
+                    <dt class="col-sm-5">Локация:</dt>
+                    <dd class="col-sm-7">{{ vacancy.geo }}</dd>
+
+                    <dt class="col-sm-5">Зарплата:</dt>
+                    <dd class="col-sm-7">
+                        {% if vacancy.salary_min or vacancy.salary_max %}
+                            {% if vacancy.salary_min %}от {{ vacancy.salary_min }}{% endif %}
+                            {% if vacancy.salary_max %}до {{ vacancy.salary_max }}{% endif %}
+                            {{ vacancy.currency }}
+                            {% if vacancy.gross_net %}({{ vacancy.gross_net }}){% endif %}
+                        {% else %}
+                            Не указана
+                        {% endif %}
+                    </dd>
+
+                    {% if vacancy.bonus %}
+                    <dt class="col-sm-5">Бонус:</dt>
+                    <dd class="col-sm-7">{{ vacancy.bonus }}</dd>
+
+                    {% if vacancy.bonus_conditions %}
+                    <dt class="col-sm-5">Условия бонуса:</dt>
+                    <dd class="col-sm-7">{{ vacancy.bonus_conditions }}</dd>
+                    {% endif %}
+                    {% endif %}
+
+                    <dt class="col-sm-5">Источник:</dt>
+                    <dd class="col-sm-7">{{ vacancy.source }}</dd>
+
+                    {% if vacancy.author %}
+                    <dt class="col-sm-5">Автор:</dt>
+                    <dd class="col-sm-7">{{ vacancy.author }}</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-5">Дата публикации:</dt>
+                    <dd class="col-sm-7">{{ vacancy.date_posted|date:"d.m.Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка для описания вакансии -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Описание вакансии</h3>
+                <div class="description-block">
+                    {{ vacancy.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

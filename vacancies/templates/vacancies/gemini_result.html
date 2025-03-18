@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Gemini AI — Результаты{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-card {
+        transition: transform 0.2s;
+    }
+    .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .input-text {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    .processed-text {
+        background-color: #e9ecef;
+        border-left: 4px solid #198754;
+        padding: 15px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Навигационные ссылки -->
+    <div class="mb-4 d-flex gap-3">
+        <a href="{% url 'gemini' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Вернуться к вводу
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i> На главную
+        </a>
+    </div>
+
+    <h1 class="mb-4">Результаты обработки Gemini AI</h1>
+
+    {% if results %}
+        {% for result in results %}
+            <div class="card mb-4 result-card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="card-title">Введённый текст:</h5>
+                        <div class="input-text">
+                            {{ result.input_text }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="card-title">Обработанный текст:</h5>
+                        <div class="processed-text">
+                            {{ result.processed_text }}
+                        </div>
+                    </div>
+                    
+                    <p class="card-text text-end">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 
+                            Время обработки: {{ result.created_at }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Пока что нет результатов.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

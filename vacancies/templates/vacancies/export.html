@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Экспорт вакансий{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="mb-4">Экспорт вакансий в Excel</h1>
+            <div class="card">
+                <div class="card-body">
+                    <p class="lead mb-4">Нажмите кнопку ниже, чтобы скачать данные вакансий в формате Excel.</p>
+                    <div class="d-grid gap-3 col-md-6 mx-auto">
+                        <a href="{% url 'export_vacancies' %}" class="btn btn-info btn-lg">
+                            <i class="bi bi-file-earmark-excel"></i> Экспортировать
+                        </a>
+                        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Вернуться к списку вакансий
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

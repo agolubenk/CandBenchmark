@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Загрузить Excel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .upload-button {
+        transition: all 0.3s ease;
+    }
+    .upload-button:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="upload-container">
+        <h1 class="mb-4 text-center">Загрузить Excel</h1>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="{{ form.excel_file.id_for_label }}" class="form-label">
+                    {{ form.excel_file.label }}
+                </label>
+                <div class="input-group">
+                    {{ form.excel_file }}
+                    <button type="submit" class="btn btn-primary upload-button">
+                        <i class="bi bi-upload"></i> Загрузить
+                    </button>
+                </div>
+                {% if form.excel_file.help_text %}
+                    <div class="form-text">{{ form.excel_file.help_text }}</div>
+                {% endif %}
+            </div>
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'gemini' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Вернуться назад
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

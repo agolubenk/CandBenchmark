@@ -1,0 +1,59 @@
+---
+x-default-python:
+  &default-python
+  build:
+    context: .
+  volumes:
+    - ./db.sqlite3:/app/db.sqlite3
+    - .:/app
+  restart: always
+  environment:
+    - DJANGO_SETTINGS_MODULE=CandBechmark.settings
+    - PYTHONUNBUFFERED=1
+
+services:
+  redis:
+    image: redis:7.2.5-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+  celery-worker:
+    <<: *default-python
+    command: python3 -m celery -A CandBechmark worker -l info
+    depends_on:
+      - redis
+  celery-beat:
+    <<: *default-python
+    command: python3 -m celery -A CandBechmark beat -l info
+    depends_on:
+      - redis
+  web:
+    <<: *default-python
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py collectstatic --noinput &&
+             python3 manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - celery-beat
+      - celery-worker
+  bot:
+    <<: *default-python
+    command: python3 bot.py
+    depends_on:
+      - web
+  scraper:
+    <<: *default-python
+    command: python3 manage.py scrape_hhru
+    depends_on:
+      - web
+      - celery-beat
+      - celery-worker
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=your_db_name
+      - POSTGRES_USER=your_user
+      - POSTGRES_PASSWORD=your_password

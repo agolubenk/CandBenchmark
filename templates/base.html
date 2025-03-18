@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru-ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Market Benchmark{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключение Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/icons/font/bootstrap-icons.css' %}">
+
+  <style>
+    body {
+      padding-top: 70px;
+    }
+    .scrollable-content {
+      height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Фиксированный Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: #cfe2ff;">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'index' %}">
+        <i class="bi bi-cash-coin"></i> Market Benchmark
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Переключить навигацию">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Меню</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'index' %}"><i class="bi bi-house"></i> Главная</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'hhru_vacancy_list' %}"><i class="bi bi-briefcase"></i> Вакансии с hh.ru</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'change_prompt' %}"><i class="bi bi-pencil-square"></i> Редактировать промпт</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'gemini' %}"><i class="bi bi-plus-square-dotted"></i> Добавить новое описание</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'export_vacancies' %}"><i class="bi bi-file-earmark-excel"></i> Скачать все описания</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'pivot_summary' %}"><i class="bi bi-graph-up"></i> Посмотреть аналитику</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-wrench-adjustable-circle"></i> Админ-панель</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Основной контент -->
+  <div class="scrollable-content">
+    <div class="container mt-4">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <!-- Подключение Bootstrap 5 JS Bundle с Popper -->
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html> 
