@@ -7,7 +7,7 @@ import requests
 
 import google.generativeai as genai
 
-from CandBechmark import settings
+from CandBenchmark import settings
 from .models import Vacancy, GeminiPrompt, TaskQueue
 from .utils import unify_currency, unify_grade
 

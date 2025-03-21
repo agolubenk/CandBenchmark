@@ -3,7 +3,7 @@ import logging
 from asgiref.sync import sync_to_async
 
 # Настраиваем окружение Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CandBechmark.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CandBenchmark.settings")
 import django
 
 django.setup()
