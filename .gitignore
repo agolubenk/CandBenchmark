@@ -7,3 +7,4 @@ celerybeat*
 **/__pycache__/
 *.pyi
 *.pyc
+staticfiles/

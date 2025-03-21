@@ -4,9 +4,9 @@ x-default-python:
   build:
     context: .
   volumes:
-    - ./db.sqlite3:/app/db.sqlite3
     - .:/app
   restart: always
+  env_file: .env
   environment:
     - DJANGO_SETTINGS_MODULE=CandBechmark.settings
     - PYTHONUNBUFFERED=1
@@ -15,18 +15,20 @@ services:
   redis:
     image: redis:7.2.5-alpine
     restart: always
-    ports:
-      - "6379:6379"
+    expose:
+      - 6379
   celery-worker:
     <<: *default-python
     command: python3 -m celery -A CandBechmark worker -l info
     depends_on:
       - redis
+      - web
   celery-beat:
     <<: *default-python
     command: python3 -m celery -A CandBechmark beat -l info
     depends_on:
       - redis
+      - web
   web:
     <<: *default-python
     command: >
@@ -37,8 +39,6 @@ services:
       - "8000:8000"
     depends_on:
       - redis
-      - celery-beat
-      - celery-worker
   bot:
     <<: *default-python
     command: python3 bot.py
@@ -51,9 +51,15 @@ services:
       - web
       - celery-beat
       - celery-worker
-  db:
-    image: postgres:13
+  postgres:
+    image: postgres:17.4-alpine3.21
+    restart: always
     environment:
-      - POSTGRES_DB=your_db_name
-      - POSTGRES_USER=your_user
-      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - data-postgres:/var/lib/postgresql/data
+
+volumes:
+  data-postgres: null

@@ -36,7 +36,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     """
     message = (
         "Добро пожаловать в систему вакансий!\n"
-        "Чтобы добавить вакансию с обработкой через Gemini AI, введите"
+        "Чтобы добавить вакансию с обработкой через Gemini AI, введите "
         "добавьте описание вакансии в любом удобном для Вас виде"
     )
     await update.message.reply_text(message)
@@ -59,22 +59,31 @@ async def process_vacancy(update: Update, context: CallbackContext) -> int:
     После разбора данных формируется текст вакансии, которому предшествует промпт.
     Ответ от Gemini AI сохраняется в базе данных в поле description модели Vacancy.
     """
+    if not update.message.text.strip():
+        await update.message.reply_text("Пожалуйста, введите описание вакансии")
+        return ConversationHandler.END
+        
     result = await save_task(update.message.text)
     await update.message.reply_text(result)
     return ConversationHandler.END
 
 
 def main():
-    # Замените YOUR_TELEGRAM_BOT_TOKEN на токен вашего бота
     bot_token = os.environ.get("BOT_TOKEN")
+    if not bot_token:
+        logger.error("BOT_TOKEN не найден в переменных окружения")
+        return
 
-    application = Application.builder().token(bot_token).build()
+    try:
+        application = Application.builder().token(bot_token).build()
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_vacancy))
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, process_vacancy))
 
-    logger.info("Telegram-бот запущен...")
-    application.run_polling()
+        logger.info("Telegram-бот запущен...")
+        application.run_polling()
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
 
 
 if __name__ == "__main__":
