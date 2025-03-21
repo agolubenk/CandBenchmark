@@ -39,6 +39,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'CandBenchmark.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'CandBenchmark.urls'
@@ -105,9 +106,27 @@ STATICFILES_DIRS = [
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Настройки аутентификации
+# Настройки для обязательной авторизации
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+# Список URL-путей, доступных без авторизации
+LOGIN_EXEMPT_URLS = [
+    '/login/',
+    '/admin/',
+    '/static/',
+    '/media/',
+]
+
+# Добавляем декоратор для проверки авторизации
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Настройки сессии
+SESSION_COOKIE_AGE = 86400  # 24 часа
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Настройки Celery
 CELERY_BROKER_URL = f'redis://{os.getenv("REDIS_HOST")}:6379/0'
