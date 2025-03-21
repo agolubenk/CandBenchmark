@@ -98,7 +98,8 @@
             <div class="card-body">
                 <h3 class="card-title mb-4">Описание вакансии</h3>
                 <div class="description-block">
-                    {{ vacancy.description|linebreaks }}
+                    {{ vacancy.description|safe }}
+
                 </div>
             </div>
         </div>

@@ -43,6 +43,9 @@
         const specializationInput = document.getElementById("specialization");
         const gradeInput = document.getElementById("grade");
         const geoInput = document.getElementById("geo");
+        const filterByRBButton = document.getElementById("filterByRB");
+        const showAllButton = document.getElementById("showAll");
+        let isRBFilterActive = false;
 
         function filterTables() {
             const specializationFilter = specializationInput.value.toLowerCase();
@@ -57,6 +60,7 @@
                     const cellSpecialization = cells[1].textContent.toLowerCase();
                     const cellGrade = cells[2].textContent.toLowerCase();
                     let visible = true;
+                    
                     if (specializationFilter && !cellSpecialization.includes(specializationFilter)) {
                         visible = false;
                     }
@@ -66,6 +70,10 @@
                     if (geoFilter && !cellGeo.includes(geoFilter)) {
                         visible = false;
                     }
+                    if (isRBFilterActive && !cellGeo.includes("беларусь")) {
+                        visible = false;
+                    }
+                    
                     row.style.display = visible ? "" : "none";
                 }
             });
@@ -74,6 +82,20 @@
         specializationInput.addEventListener("input", filterTables);
         gradeInput.addEventListener("input", filterTables);
         geoInput.addEventListener("input", filterTables);
+
+        filterByRBButton.addEventListener("click", function() {
+            isRBFilterActive = true;
+            filterByRBButton.classList.add("d-none");
+            showAllButton.classList.remove("d-none");
+            filterTables();
+        });
+
+        showAllButton.addEventListener("click", function() {
+            isRBFilterActive = false;
+            showAllButton.classList.add("d-none");
+            filterByRBButton.classList.remove("d-none");
+            filterTables();
+        });
 
         // Обработчики экспорта
         document.getElementById("exportGross").addEventListener("click", function(e) {
@@ -111,6 +133,10 @@
             <div class="col-md-3">
                 <label for="geo" class="form-label">Локация:</label>
                 <input type="text" class="form-control" id="geo" name="geo" placeholder="Например: Беларусь, Минск">
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary" id="filterByRB">Только РБ</button>
+                <button type="button" class="btn btn-outline-primary d-none" id="showAll">Показать все</button>
             </div>
         </div>
     </form>
