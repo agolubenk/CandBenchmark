@@ -1,4 +1,4 @@
-{% extends 'hhru/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}{{ vacancy.title }}{% endblock %}
 
@@ -6,7 +6,7 @@
 <div class="container">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'hhru_vacancy_list' %}">Вакансии HH.ru</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'hhru_vacancy_list' %}">Вакансии hh.ru</a></li>
             <li class="breadcrumb-item active">{{ vacancy.title }}</li>
         </ol>
     </nav>
