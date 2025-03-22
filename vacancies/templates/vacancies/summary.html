@@ -109,7 +109,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Объявляем все переменные в начале
-        let barChart, lineChart, pieChart;
+        let barChart, lineChart, pieChart, gradeChart;
         let isRBFilterActive = false;
         
         // Получаем все необходимые элементы
@@ -408,11 +408,12 @@
                 const matchSpecialization = !filters.specialization || 
                     item.specialization?.toLowerCase().includes(filters.specialization.toLowerCase());
                 const matchGrade = !filters.grade || 
-                    item.grade?.toLowerCase().includes(filters.grade.toLowerCase());
+                    (item.grade?.toLowerCase().includes(filters.grade.toLowerCase()) ||
+                    (typeof item.grade === 'string' && item.grade.toLowerCase().includes(filters.grade.toLowerCase())));
                 const matchGeo = !filters.geo || 
-                    item.geo.toLowerCase().includes(filters.geo.toLowerCase());
+                    (item.geo?.toLowerCase().includes(filters.geo.toLowerCase()));
                 const matchRB = !filters.onlyRB || 
-                    item.geo.toLowerCase().includes('беларусь');
+                    (item.geo?.toLowerCase().includes('беларусь'));
                 
                 return matchSpecialization && matchGrade && matchGeo && matchRB;
             });
@@ -473,6 +474,16 @@
                 pieChart.data.datasets[0].data = filteredPieData.map(item => (item.count / total * 100).toFixed(1));
                 pieChart.update();
             }
+
+            // Обновляем круговую диаграмму грейдов
+            if (gradeChart) {
+                const filteredGradeData = filterChartData(originalGradeData, filters);
+                const total = filteredGradeData.reduce((sum, item) => sum + item.count, 0);
+                
+                gradeChart.data.labels = filteredGradeData.map(item => item.grade);
+                gradeChart.data.datasets[0].data = filteredGradeData.map(item => (item.count / total * 100).toFixed(1));
+                gradeChart.update();
+            }
         }
 
         // Инициализация графиков
@@ -517,6 +528,23 @@
             { geo: 'Литва', count: 3 },
             { geo: 'Латвия', count: 2 },
             { geo: 'Эстония', count: 2 }
+        ];
+
+        // Добавляем данные для распределения по грейдам
+        const originalGradeData = [
+            { grade: 'Junior', count: 15 },
+            { grade: 'Junior+', count: 10 },
+            { grade: 'Middle-', count: 12 },
+            { grade: 'Middle', count: 25 },
+            { grade: 'Middle+', count: 20 },
+            { grade: 'Senior-', count: 8 },
+            { grade: 'Senior', count: 15 },
+            { grade: 'Senior+', count: 10 },
+            { grade: 'Lead', count: 8 },
+            { grade: 'Lead+', count: 5 },
+            { grade: 'Head', count: 3 },
+            { grade: 'C-level', count: 2 },
+            { grade: 'Trainee', count: 7 }
         ];
 
         // Инициализация столбчатого графика
@@ -730,6 +758,76 @@
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(1);
                             return `${value}\n(${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Инициализация круговой диаграммы грейдов
+        const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+        gradeChart = new Chart(gradeCtx, {
+            type: 'pie',
+            data: {
+                labels: originalGradeData.map(item => item.grade),
+                datasets: [{
+                    data: originalGradeData.map(item => item.count),
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)',   // Junior
+                        'rgba(40, 167, 69, 0.8)',   // Junior+
+                        'rgba(13, 110, 253, 0.8)',  // Middle-
+                        'rgba(0, 123, 255, 0.8)',   // Middle
+                        'rgba(0, 86, 179, 0.8)',    // Middle+
+                        'rgba(220, 53, 69, 0.8)',   // Senior-
+                        'rgba(200, 35, 51, 0.8)',   // Senior
+                        'rgba(180, 25, 41, 0.8)',   // Senior+
+                        'rgba(111, 66, 193, 0.8)',  // Lead
+                        'rgba(91, 46, 173, 0.8)',   // Lead+
+                        'rgba(23, 162, 184, 0.8)',  // Head
+                        'rgba(108, 117, 125, 0.8)', // C-level
+                        'rgba(255, 193, 7, 0.8)'    // Trainee
+                    ],
+                    borderColor: [
+                        'rgba(25, 135, 84, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(13, 110, 253, 1)',
+                        'rgba(0, 123, 255, 1)',
+                        'rgba(0, 86, 179, 1)',
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(200, 35, 51, 1)',
+                        'rgba(180, 25, 41, 1)',
+                        'rgba(111, 66, 193, 1)',
+                        'rgba(91, 46, 173, 1)',
+                        'rgba(23, 162, 184, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Распределение вакансий по грейдам',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} вакансий (${percentage}%)`;
+                            }
                         }
                     }
                 }
@@ -971,6 +1069,11 @@
                 <div class="chart-wrapper">
                     <div class="chart-container">
                         <canvas id="vacanciesByCountryChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <canvas id="gradeDistributionChart"></canvas>
                     </div>
                 </div>
             </div>
