@@ -375,15 +375,158 @@
             XLSX.writeFile(wb, "vacancies_byn.xlsx");
         });
 
+        // Объявляем переменные для хранения экземпляров графиков
+        let barChart, lineChart, pieChart;
+        
+        // Функция для фильтрации данных графиков
+        function filterChartData(data, filters) {
+            return data.filter(item => {
+                const matchSpecialization = !filters.specialization || 
+                    item.specialization?.toLowerCase().includes(filters.specialization.toLowerCase());
+                const matchGrade = !filters.grade || 
+                    item.grade?.toLowerCase().includes(filters.grade.toLowerCase());
+                const matchGeo = !filters.geo || 
+                    item.geo.toLowerCase().includes(filters.geo.toLowerCase());
+                const matchRB = !filters.onlyRB || 
+                    item.geo.toLowerCase().includes('беларусь');
+                
+                return matchSpecialization && matchGrade && matchGeo && matchRB;
+            });
+        }
+
+        // Функция обновления графиков с учетом фильтров
+        function updateCharts() {
+            const filters = {
+                specialization: document.getElementById("specialization").value,
+                grade: document.getElementById("grade").value,
+                geo: document.getElementById("geo").value,
+                onlyRB: isRBFilterActive
+            };
+
+            console.log('Применяем фильтры:', filters);
+
+            // Обновляем столбчатый график
+            if (barChart) {
+                const filteredBarData = filterChartData(originalBarData, filters);
+                barChart.data.labels = filteredBarData.map(item => item.geo);
+                barChart.data.datasets[0].data = filteredBarData.map(item => item.median);
+                barChart.update();
+            }
+
+            // Обновляем линейный график
+            if (lineChart) {
+                const filteredLineData = filterChartData(originalLineData, filters);
+                const uniqueSpecializations = [...new Set(filteredLineData.map(item => item.specialization))];
+                const uniqueCountries = ['Беларусь', 'Россия', 'Польша'].filter(country => 
+                    filteredLineData.some(item => item.geo === country)
+                );
+
+                lineChart.data.labels = uniqueSpecializations;
+                lineChart.data.datasets = uniqueCountries.map(country => ({
+                    label: country,
+                    data: uniqueSpecializations.map(spec => {
+                        const item = filteredLineData.find(d => d.geo === country && d.specialization === spec);
+                        return item ? item.median : null;
+                    }),
+                    borderColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 1)' :
+                                country === 'Россия' ? 'rgba(13, 110, 253, 1)' :
+                                'rgba(220, 53, 69, 1)',
+                    backgroundColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 0.1)' :
+                                    country === 'Россия' ? 'rgba(13, 110, 253, 0.1)' :
+                                    'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }));
+                lineChart.update();
+            }
+
+            // Обновляем круговую диаграмму
+            if (pieChart) {
+                const filteredPieData = filterChartData(originalPieData, filters);
+                const total = filteredPieData.reduce((sum, item) => sum + item.count, 0);
+                
+                pieChart.data.labels = filteredPieData.map(item => item.geo);
+                pieChart.data.datasets[0].data = filteredPieData.map(item => (item.count / total * 100).toFixed(1));
+                pieChart.update();
+            }
+        }
+
+        // Добавляем обработчики событий для фильтров
+        const filterInputs = ["specialization", "grade", "geo"].map(id => document.getElementById(id));
+        filterInputs.forEach(input => {
+            if (input) {
+                input.addEventListener("input", updateCharts);
+            }
+        });
+
+        // Обработчики для кнопок "Только РБ" и "Показать все"
+        if (filterByRBButton) {
+            filterByRBButton.addEventListener("click", function() {
+                isRBFilterActive = true;
+                updateCharts();
+            });
+        }
+
+        if (showAllButton) {
+            showAllButton.addEventListener("click", function() {
+                isRBFilterActive = false;
+                updateCharts();
+            });
+        }
+
+        // Исходные данные для графиков
+        const originalBarData = [
+            { geo: 'Беларусь', median: 3500 },
+            { geo: 'Россия', median: 4200 },
+            { geo: 'Казахстан', median: 3800 },
+            { geo: 'Украина', median: 3200 },
+            { geo: 'Польша', median: 4500 },
+            { geo: 'Литва', median: 4000 },
+            { geo: 'Латвия', median: 3900 },
+            { geo: 'Эстония', median: 4100 }
+        ];
+
+        const originalLineData = [
+            { geo: 'Беларусь', specialization: 'Data Engineer', median: 3500 },
+            { geo: 'Беларусь', specialization: 'Data Scientist', median: 3200 },
+            { geo: 'Беларусь', specialization: 'Data Analyst', median: 2800 },
+            { geo: 'Беларусь', specialization: 'ML Engineer', median: 3800 },
+            { geo: 'Беларусь', specialization: 'Big Data Engineer', median: 4000 },
+            { geo: 'Беларусь', specialization: 'BI Analyst', median: 3000 },
+            { geo: 'Россия', specialization: 'Data Engineer', median: 4200 },
+            { geo: 'Россия', specialization: 'Data Scientist', median: 3800 },
+            { geo: 'Россия', specialization: 'Data Analyst', median: 3200 },
+            { geo: 'Россия', specialization: 'ML Engineer', median: 4500 },
+            { geo: 'Россия', specialization: 'Big Data Engineer', median: 4800 },
+            { geo: 'Россия', specialization: 'BI Analyst', median: 3500 },
+            { geo: 'Польша', specialization: 'Data Engineer', median: 4500 },
+            { geo: 'Польша', specialization: 'Data Scientist', median: 4200 },
+            { geo: 'Польша', specialization: 'Data Analyst', median: 3500 },
+            { geo: 'Польша', specialization: 'ML Engineer', median: 4800 },
+            { geo: 'Польша', specialization: 'Big Data Engineer', median: 5000 },
+            { geo: 'Польша', specialization: 'BI Analyst', median: 3800 }
+        ];
+
+        const originalPieData = [
+            { geo: 'Беларусь', count: 45 },
+            { geo: 'Россия', count: 25 },
+            { geo: 'Казахстан', count: 10 },
+            { geo: 'Украина', count: 5 },
+            { geo: 'Польша', count: 8 },
+            { geo: 'Литва', count: 3 },
+            { geo: 'Латвия', count: 2 },
+            { geo: 'Эстония', count: 2 }
+        ];
+
         // Инициализация столбчатого графика
         const barCtx = document.getElementById('medianSalaryChart').getContext('2d');
-        new Chart(barCtx, {
+        barChart = new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: ['Беларусь', 'Россия', 'Казахстан', 'Украина', 'Польша', 'Литва', 'Латвия', 'Эстония'],
+                labels: originalBarData.map(item => item.geo),
                 datasets: [{
                     label: 'Медианная зарплата (BYN)',
-                    data: [3500, 4200, 3800, 3200, 4500, 4000, 3900, 4100],
+                    data: originalBarData.map(item => item.median),
                     backgroundColor: 'rgba(13, 110, 253, 0.5)',
                     borderColor: 'rgba(13, 110, 253, 1)',
                     borderWidth: 1
@@ -443,36 +586,24 @@
 
         // Инициализация линейного графика
         const lineCtx = document.getElementById('medianSalaryLineChart').getContext('2d');
-        new Chart(lineCtx, {
+        lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: ['Data Engineer', 'Data Scientist', 'Data Analyst', 'ML Engineer', 'Big Data Engineer', 'BI Analyst'],
-                datasets: [
-                    {
-                        label: 'Беларусь',
-                        data: [3500, 3200, 2800, 3800, 4000, 3000],
-                        borderColor: 'rgba(25, 135, 84, 1)',
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Россия',
-                        data: [4200, 3800, 3200, 4500, 4800, 3500],
-                        borderColor: 'rgba(13, 110, 253, 1)',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Польша',
-                        data: [4500, 4200, 3500, 4800, 5000, 3800],
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4
-                    }
-                ]
+                labels: [...new Set(originalLineData.map(item => item.specialization))],
+                datasets: ['Беларусь', 'Россия', 'Польша'].map(country => ({
+                    label: country,
+                    data: originalLineData
+                        .filter(item => item.geo === country)
+                        .map(item => item.median),
+                    borderColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 1)' :
+                                country === 'Россия' ? 'rgba(13, 110, 253, 1)' :
+                                'rgba(220, 53, 69, 1)',
+                    backgroundColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 0.1)' :
+                                    country === 'Россия' ? 'rgba(13, 110, 253, 0.1)' :
+                                    'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4
+                }))
             },
             options: {
                 responsive: true,
@@ -534,21 +665,21 @@
 
         // Инициализация круговой диаграммы
         const pieCtx = document.getElementById('vacanciesByCountryChart').getContext('2d');
-        new Chart(pieCtx, {
+        pieChart = new Chart(pieCtx, {
             type: 'pie',
             data: {
-                labels: ['Беларусь', 'Россия', 'Казахстан', 'Украина', 'Польша', 'Литва', 'Латвия', 'Эстония'],
+                labels: originalPieData.map(item => item.geo),
                 datasets: [{
-                    data: [45, 25, 10, 5, 8, 3, 2, 2],
+                    data: originalPieData.map(item => item.count),
                     backgroundColor: [
-                        'rgba(25, 135, 84, 0.8)',  // Беларусь - зеленый
-                        'rgba(13, 110, 253, 0.8)', // Россия - синий
-                        'rgba(255, 193, 7, 0.8)',  // Казахстан - желтый
-                        'rgba(220, 53, 69, 0.8)',  // Украина - красный
-                        'rgba(111, 66, 193, 0.8)', // Польша - фиолетовый
-                        'rgba(23, 162, 184, 0.8)', // Литва - голубой
-                        'rgba(255, 127, 80, 0.8)', // Латвия - оранжевый
-                        'rgba(108, 117, 125, 0.8)' // Эстония - серый
+                        'rgba(25, 135, 84, 0.8)',   // Беларусь
+                        'rgba(13, 110, 253, 0.8)',  // Россия
+                        'rgba(255, 193, 7, 0.8)',   // Казахстан
+                        'rgba(220, 53, 69, 0.8)',   // Украина
+                        'rgba(111, 66, 193, 0.8)',  // Польша
+                        'rgba(23, 162, 184, 0.8)',  // Литва
+                        'rgba(255, 127, 80, 0.8)',  // Латвия
+                        'rgba(108, 117, 125, 0.8)'  // Эстония
                     ],
                     borderColor: [
                         'rgba(25, 135, 84, 1)',
