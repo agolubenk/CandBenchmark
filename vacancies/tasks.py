@@ -96,7 +96,7 @@ def analyze_text(text):
 
 @shared_task
 def execute_batches():
-    batch_size = 10
+    batch_size = 8
     tasks = TaskQueue.objects.all().order_by('priority', 'id')[:batch_size]
 
     if tasks:
