@@ -124,12 +124,19 @@
             const dateStr = now.toLocaleDateString('ru-RU');
             const timeStr = now.toLocaleTimeString('ru-RU');
             
-            // Создаем PDF документ
+            // Создаем PDF документ с поддержкой кириллицы
             const { jsPDF } = window.jspdf;
             if (!jsPDF) {
                 throw new Error('jsPDF не найден');
             }
-            const pdf = new jsPDF();
+            const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4',
+                putOnlyUsedFonts: true,
+                floatPrecision: 16
+            });
+
             const pageHeight = pdf.internal.pageSize.getHeight();
             const pageWidth = pdf.internal.pageSize.getWidth();
             
@@ -165,6 +172,82 @@
                 yOffset += 90;
             }
 
+            // Добавляем подпись на странице с графиками
+            addFooter(pdf, dateStr, timeStr);
+            
+            // Добавляем новую страницу для таблицы
+            pdf.addPage();
+            
+            // Получаем данные из таблицы BYN
+            const table = document.getElementById('tableBYN');
+            const rows = Array.from(table.querySelectorAll('tr'));
+            
+            // Настройки для таблицы
+            pdf.setFontSize(12);
+            pdf.setTextColor(0, 0, 0);
+            
+            // Добавляем заголовок таблицы
+            pdf.setFontSize(14);
+            const title = 'Сводная таблица зарплат (BYN)';
+            const titleWidth = pdf.getStringUnitWidth(title) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
+            pdf.text(title, (pageWidth - titleWidth) / 2, 20);
+            pdf.setFontSize(12);
+            
+            let startY = 30;
+            const cellPadding = 2;
+            const fontSize = 8;
+            pdf.setFontSize(fontSize);
+            
+            // Ширина колонок
+            const colWidths = [30, 35, 20, 30, 30, 35];
+            const headers = ['Гео', 'Специализация', 'Грейд', 'Минимум', 'Максимум', 'Медиана'];
+            
+            // Рисуем заголовки
+            let currentX = 10;
+            headers.forEach((header, i) => {
+                pdf.setFillColor(240, 240, 240);
+                pdf.rect(currentX, startY, colWidths[i], 7, 'F');
+                const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
+                pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
+                currentX += colWidths[i];
+            });
+            
+            startY += 7;
+            
+            // Добавляем данные
+            rows.slice(1).forEach((row, rowIndex) => {
+                const cells = Array.from(row.querySelectorAll('td'));
+                
+                // Проверяем, нужна ли новая страница
+                if (startY > pageHeight - 20) {
+                    addFooter(pdf, dateStr, timeStr);
+                    pdf.addPage();
+                    startY = 20;
+                    
+                    // Повторяем заголовки на новой странице
+                    currentX = 10;
+                    headers.forEach((header, i) => {
+                        pdf.setFillColor(240, 240, 240);
+                        pdf.rect(currentX, startY, colWidths[i], 7, 'F');
+                        const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
+                        pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
+                        currentX += colWidths[i];
+                    });
+                    startY += 7;
+                }
+                
+                // Добавляем строку данных
+                currentX = 10;
+                cells.slice(0, 6).forEach((cell, i) => {
+                    const text = cell.textContent.trim() || '--';
+                    const textWidth = pdf.getStringUnitWidth(text) * fontSize / pdf.internal.scaleFactor;
+                    pdf.text(text, currentX + (colWidths[i] - textWidth) / 2, startY + 5);
+                    currentX += colWidths[i];
+                });
+                
+                startY += 7;
+            });
+            
             // Добавляем подпись на последней странице
             addFooter(pdf, dateStr, timeStr);
             
