@@ -119,12 +119,19 @@
             // Ждем немного, чтобы графики отрендерились
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            // Получаем текущую дату и время
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ru-RU');
+            const timeStr = now.toLocaleTimeString('ru-RU');
+            
             // Создаем PDF документ
             const { jsPDF } = window.jspdf;
             if (!jsPDF) {
                 throw new Error('jsPDF не найден');
             }
             const pdf = new jsPDF();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const pageWidth = pdf.internal.pageSize.getWidth();
             
             // Получаем графики
             const charts = document.querySelectorAll('#infographics .chart-container canvas');
@@ -147,6 +154,8 @@
                 
                 // Если нужна новая страница
                 if (yOffset > 200) {
+                    // Добавляем подпись перед новой страницей
+                    addFooter(pdf, dateStr, timeStr);
                     pdf.addPage();
                     yOffset = 10;
                 }
@@ -155,6 +164,9 @@
                 pdf.addImage(imgData, 'PNG', 10, yOffset, 190, 80);
                 yOffset += 90;
             }
+
+            // Добавляем подпись на последней странице
+            addFooter(pdf, dateStr, timeStr);
             
             // Сохраняем PDF
             pdf.save('vacancy_stats.pdf');
@@ -164,6 +176,27 @@
             console.error('Ошибка:', error);
             alert('Ошибка при создании PDF: ' + error.message);
         }
+    }
+
+    // Функция для добавления нижнего колонтитула
+    function addFooter(pdf, dateStr, timeStr) {
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(128, 128, 128); // Серый цвет для подписи
+        
+        // Добавляем подпись
+        const signature = 'Market Benchmark from @agolubenk';
+        const datetime = `Создано: ${dateStr} ${timeStr}`;
+        
+        // Вычисляем ширину текста для центрирования
+        const signatureWidth = pdf.getStringUnitWidth(signature) * 10 / pdf.internal.scaleFactor;
+        const datetimeWidth = pdf.getStringUnitWidth(datetime) * 10 / pdf.internal.scaleFactor;
+        
+        // Добавляем подпись и дату/время
+        pdf.text(signature, (pageWidth - signatureWidth) / 2, pageHeight - 15);
+        pdf.text(datetime, (pageWidth - datetimeWidth) / 2, pageHeight - 10);
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -286,6 +319,13 @@
                     },
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y} BYN`;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -300,6 +340,18 @@
                         title: {
                             display: true,
                             text: 'Страны'
+                        }
+                    }
+                },
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value + ' BYN';
+                        },
+                        font: {
+                            weight: 'bold'
                         }
                     }
                 }
@@ -353,6 +405,26 @@
                     legend: {
                         display: true,
                         position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y} BYN`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.dataIndex === context.dataset.data.length - 1;
+                        },
+                        align: 'right',
+                        anchor: 'end',
+                        formatter: function(value, context) {
+                            return `${value} BYN`;
+                        },
+                        font: {
+                            size: 11
+                        }
                     }
                 },
                 scales: {
@@ -429,8 +501,20 @@
                                 const value = context.raw;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = ((value / total) * 100).toFixed(1);
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                return `${context.label}: ${value} вакансий (${percentage}%)`;
                             }
+                        }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        },
+                        formatter: function(value, context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${value}\n(${percentage}%)`;
                         }
                     }
                 }
