@@ -59,11 +59,29 @@
     .exchange-rate-table td, .exchange-rate-table th {
         padding: 0.5rem 1rem;
     }
+    .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin: 20px 0;
+    }
+    .chart-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .charts-grid {
+        display: grid;
+        gap: 30px;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Анимация кнопки курсов валют
@@ -146,6 +164,184 @@
             const table = document.getElementById("tableBYN");
             const wb = XLSX.utils.table_to_book(table, { sheet: "BYN" });
             XLSX.writeFile(wb, "vacancies_byn.xlsx");
+        });
+
+        // Инициализация столбчатого графика
+        const barCtx = document.getElementById('medianSalaryChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Беларусь', 'Россия', 'Казахстан', 'Украина', 'Польша', 'Литва', 'Латвия', 'Эстония'],
+                datasets: [{
+                    label: 'Медианная зарплата (BYN)',
+                    data: [3500, 4200, 3800, 3200, 4500, 4000, 3900, 4100],
+                    backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Медианные зарплаты по странам (столбчатый график)',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'BYN'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Страны'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Инициализация линейного графика
+        const lineCtx = document.getElementById('medianSalaryLineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ['Data Engineer', 'Data Scientist', 'Data Analyst', 'ML Engineer', 'Big Data Engineer', 'BI Analyst'],
+                datasets: [
+                    {
+                        label: 'Беларусь',
+                        data: [3500, 3200, 2800, 3800, 4000, 3000],
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Россия',
+                        data: [4200, 3800, 3200, 4500, 4800, 3500],
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Польша',
+                        data: [4500, 4200, 3500, 4800, 5000, 3800],
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Медианные зарплаты по специализациям в разных странах',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'BYN'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Специализации'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // Инициализация круговой диаграммы
+        const pieCtx = document.getElementById('vacanciesByCountryChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Беларусь', 'Россия', 'Казахстан', 'Украина', 'Польша', 'Литва', 'Латвия', 'Эстония'],
+                datasets: [{
+                    data: [45, 25, 10, 5, 8, 3, 2, 2],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.8)',  // Беларусь - зеленый
+                        'rgba(13, 110, 253, 0.8)', // Россия - синий
+                        'rgba(255, 193, 7, 0.8)',  // Казахстан - желтый
+                        'rgba(220, 53, 69, 0.8)',  // Украина - красный
+                        'rgba(111, 66, 193, 0.8)', // Польша - фиолетовый
+                        'rgba(23, 162, 184, 0.8)', // Литва - голубой
+                        'rgba(255, 127, 80, 0.8)', // Латвия - оранжевый
+                        'rgba(108, 117, 125, 0.8)' // Эстония - серый
+                    ],
+                    borderColor: [
+                        'rgba(25, 135, 84, 1)',
+                        'rgba(13, 110, 253, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(111, 66, 193, 1)',
+                        'rgba(23, 162, 184, 1)',
+                        'rgba(255, 127, 80, 1)',
+                        'rgba(108, 117, 125, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Распределение вакансий по странам',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
         });
     });
 </script>
@@ -359,9 +555,25 @@
             </div><!-- End of accordion -->
         </div>
 
-        <!-- Вкладка "Инфо-графики" с текстом-заглушкой -->
+        <!-- Вкладка "Инфо-графики" -->
         <div class="tab-pane fade" id="infographics" role="tabpanel" aria-labelledby="infographics-tab">
-            <p>Текст для заполнения</p>
+            <div class="charts-grid">
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <canvas id="medianSalaryChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <canvas id="medianSalaryLineChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <div class="chart-container">
+                        <canvas id="vacanciesByCountryChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div><!-- End of tab content -->
 </div><!-- End container -->
