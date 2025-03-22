@@ -97,3 +97,70 @@ class ExchangeRate(models.Model):
 
     def __str__(self):
         return f'{self.currency}: {self.rate} BYN'
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    last_name = models.CharField('Фамилия', max_length=100, blank=True)
+    first_name = models.CharField('Имя', max_length=100, blank=True)
+    middle_name = models.CharField('Отчество', max_length=100, blank=True)
+    company = models.CharField('Компания', max_length=200, blank=True)
+    phone = models.CharField('Телефон', max_length=20, blank=True)
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    updated_at = models.DateTimeField('Дата обновления', auto_now=True)
+    _skip_user_save = False
+
+    class Meta:
+        verbose_name = 'Профиль пользователя'
+        verbose_name_plural = 'Профили пользователей'
+
+    def __str__(self):
+        return f'Профиль пользователя {self.user.username}'
+
+    def save(self, *args, **kwargs):
+        """Сохраняем профиль и синхронизируем данные с User"""
+        if not self._skip_user_save:
+            if self.first_name != self.user.first_name or self.last_name != self.user.last_name:
+                self.user.first_name = self.first_name
+                self.user.last_name = self.last_name
+                self.user._skip_profile_save = True
+                try:
+                    self.user.save()
+                finally:
+                    self.user._skip_profile_save = False
+        super().save(*args, **kwargs)
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Создаем профиль при создании пользователя"""
+    if created:
+        UserProfile.objects.create(
+            user=instance,
+            first_name=instance.first_name,
+            last_name=instance.last_name,
+            _skip_user_save=True
+        )
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, created, **kwargs):
+    """Обновляем профиль при обновлении пользователя"""
+    if hasattr(instance, '_skip_profile_save') and instance._skip_profile_save:
+        return
+
+    try:
+        profile = instance.profile
+        if profile.first_name != instance.first_name or profile.last_name != instance.last_name:
+            profile.first_name = instance.first_name
+            profile.last_name = instance.last_name
+            profile._skip_user_save = True
+            try:
+                profile.save()
+            finally:
+                profile._skip_user_save = False
+    except UserProfile.DoesNotExist:
+        if not created:
+            UserProfile.objects.create(
+                user=instance,
+                first_name=instance.first_name,
+                last_name=instance.last_name,
+                _skip_user_save=True
+            )

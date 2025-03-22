@@ -6,9 +6,10 @@ import requests
 from datetime import datetime, timedelta
 from django.core.cache import cache
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
-from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue, ExchangeRate
-from vacancies.forms import GeminiInputForm, GeminiPromptForm
+from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue, ExchangeRate, UserProfile
+from vacancies.forms import GeminiInputForm, GeminiPromptForm, UserProfileForm
 from django.contrib import messages
 
 # Для сводной статистики
@@ -510,3 +511,34 @@ def get_exchange_rates():
             rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033}
     
     return rates
+
+
+@login_required
+def profile(request):
+    try:
+        profile = request.user.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            profile = form.save()
+            # Обновляем данные в модели User
+            request.user.first_name = profile.first_name
+            request.user.last_name = profile.last_name
+            request.user.save()
+            messages.success(request, 'Профиль успешно обновлен')
+            return redirect('profile')
+    else:
+        # Инициализируем форму данными из профиля
+        initial_data = {
+            'last_name': profile.last_name or request.user.last_name,
+            'first_name': profile.first_name or request.user.first_name,
+            'middle_name': profile.middle_name,
+            'company': profile.company,
+            'phone': profile.phone,
+        }
+        form = UserProfileForm(instance=profile, initial=initial_data)
+
+    return render(request, 'registration/profile.html', {'form': form})
