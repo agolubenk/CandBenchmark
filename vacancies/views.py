@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import openpyxl
 import logging
 import requests
@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 
 from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue, ExchangeRate, UserProfile
-from vacancies.forms import GeminiInputForm, GeminiPromptForm, UserProfileForm
+from vacancies.forms import GeminiInputForm, GeminiPromptForm, UserProfileForm, VacancyEditForm
 from django.contrib import messages
 
 # Для сводной статистики
@@ -25,7 +25,16 @@ logger = logging.getLogger(__name__)
 
 def vacancy_detail(request, vacancy_id):
     vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
-    return render(request, 'vacancies/detail.html', {'vacancy': vacancy})
+    form = VacancyEditForm(instance=vacancy)
+    edit_history = {
+        'editor': vacancy.last_edited_by.get_full_name() if vacancy.last_edited_by else None,
+        'edited_at': vacancy.last_edited_at
+    }
+    return render(request, 'vacancies/detail.html', {
+        'vacancy': vacancy,
+        'form': form,
+        'edit_history': edit_history
+    })
 
 
 def index(request):
@@ -542,3 +551,37 @@ def profile(request):
         form = UserProfileForm(instance=profile, initial=initial_data)
 
     return render(request, 'registration/profile.html', {'form': form})
+
+
+@login_required
+def edit_vacancy(request, vacancy_id):
+    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    if request.method == 'POST':
+        form = VacancyEditForm(request.POST, instance=vacancy)
+        if form.is_valid():
+            vacancy = form.save(commit=False)
+            vacancy.last_edited_by = request.user
+            vacancy.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+            
+            messages.success(request, 'Вакансия успешно обновлена')
+            return redirect('vacancy_detail', vacancy_id=vacancy.id)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                })
+    else:
+        form = VacancyEditForm(instance=vacancy)
+    
+    return render(request, 'vacancies/detail.html', {
+        'form': form,
+        'vacancy': vacancy,
+        'edit_history': {
+            'editor': vacancy.last_edited_by.get_full_name() if vacancy.last_edited_by else None,
+            'edited_at': vacancy.last_edited_at
+        }
+    })

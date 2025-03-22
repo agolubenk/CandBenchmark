@@ -33,6 +33,18 @@ class Vacancy(models.Model):
     source = models.CharField("Источник", max_length=255, blank=True)
     author = models.CharField("Автор", max_length=255, blank=True)
     description = models.TextField("Описание вакансии", blank=True)
+    last_edited_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='edited_vacancies',
+        verbose_name='Последний редактор'
+    )
+    last_edited_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Дата последнего редактирования'
+    )
 
     def clean(self):
         if self.salary_min and self.salary_max and self.salary_min > self.salary_max:
@@ -49,8 +61,9 @@ class Vacancy(models.Model):
         return f"{self.company} ({self.grade} - {self.currency})"
 
     class Meta:
-        verbose_name = "Сохраненная вакансия"
-        verbose_name_plural = "Сохраненные вакансии"
+        verbose_name = 'Вакансия'
+        verbose_name_plural = 'Вакансии'
+        ordering = ['-date_posted']
 
 
 class GeminiResult(models.Model):

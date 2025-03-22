@@ -19,11 +19,41 @@
     .back-button:hover {
         transform: translateX(-3px);
     }
+    .edit-history {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+    .edit-button {
+        transition: all 0.3s ease;
+    }
+    .edit-button:hover {
+        transform: scale(1.05);
+    }
+    .modal-dialog {
+        max-width: 800px;
+    }
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Заголовок с кнопкой "назад" в синем кружке -->
+<!-- Заголовок с кнопкой "назад" -->
 <div class="d-flex align-items-center mb-4">
     <a href="javascript:void(0)" 
        onclick="window.history.back()"
@@ -89,7 +119,32 @@
                     <dt class="col-sm-5">Дата публикации:</dt>
                     <dd class="col-sm-7">{{ vacancy.date_posted|date:"d.m.Y" }}</dd>
                 </dl>
+
+                {% if edit_history.editor or edit_history.edited_at %}
+                <div class="edit-history">
+                    <small>
+                        {% if edit_history.editor %}
+                            Последний редактор: {{ edit_history.editor }}<br>
+                        {% endif %}
+                        {% if edit_history.edited_at %}
+                            Дата редактирования: {{ edit_history.edited_at|date:"d.m.Y H:i" }}
+                        {% endif %}
+                    </small>
+                </div>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                {% endif %}
             </div>
+        </div>
+
+        <div class="mt-4 text-end">
+            <button type="button" 
+                    class="btn btn-primary edit-button w-100"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editVacancyModal">
+                <i class="bi bi-pencil"></i> Редактировать информацию
+            </button>
         </div>
     </div>
 
@@ -100,10 +155,130 @@
                 <h3 class="card-title mb-4">Описание вакансии</h3>
                 <div class="description-block">
                     {{ vacancy.description|safe }}
-
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Модальное окно для редактирования -->
+<div class="modal fade" id="editVacancyModal" tabindex="-1" aria-labelledby="editVacancyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVacancyModalLabel">Редактирование вакансии</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'edit_vacancy' vacancy.id %}" id="editVacancyForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_company" class="form-label">Компания:</label>
+                                <input type="text" name="company" id="id_company" class="form-control" value="{{ vacancy.company }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_geo" class="form-label">Локация:</label>
+                                <input type="text" name="geo" id="id_geo" class="form-control" value="{{ vacancy.geo }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_specialization" class="form-label">Специализация:</label>
+                                <input type="text" name="specialization" id="id_specialization" class="form-control" value="{{ vacancy.specialization }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_grade" class="form-label">Грейд:</label>
+                                <input type="text" name="grade" id="id_grade" class="form-control" value="{{ vacancy.grade }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_salary_min" class="form-label">Минимальная зарплата:</label>
+                                <input type="number" name="salary_min" id="id_salary_min" class="form-control" value="{{ vacancy.salary_min }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_salary_max" class="form-label">Максимальная зарплата:</label>
+                                <input type="number" name="salary_max" id="id_salary_max" class="form-control" value="{{ vacancy.salary_max }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_currency" class="form-label">Валюта:</label>
+                                <input type="text" name="currency" id="id_currency" class="form-control" value="{{ vacancy.currency }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_gross_net" class="form-label">Gross/Net:</label>
+                                <input type="text" name="gross_net" id="id_gross_net" class="form-control" value="{{ vacancy.gross_net }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="id_bonus" class="form-label">Бонус:</label>
+                                <input type="text" name="bonus" id="id_bonus" class="form-control" value="{{ vacancy.bonus }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_bonus_conditions" class="form-label">Условия бонуса:</label>
+                                <textarea name="bonus_conditions" id="id_bonus_conditions" class="form-control" rows="3">{{ vacancy.bonus_conditions }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_work_format" class="form-label">Формат работы:</label>
+                                <input type="text" name="work_format" id="id_work_format" class="form-control" value="{{ vacancy.work_format }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_description" class="form-label">Описание вакансии:</label>
+                                <textarea name="description" id="id_description" class="form-control" rows="5">{{ vacancy.description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editVacancyForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Закрываем модальное окно
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editVacancyModal'));
+                modal.hide();
+                
+                // Обновляем страницу для отображения изменений
+                window.location.reload();
+            } else {
+                // Показываем ошибки, если они есть
+                alert('Произошла ошибка при сохранении данных');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при отправке данных');
+        });
+    });
+});
+</script>
 {% endblock %}

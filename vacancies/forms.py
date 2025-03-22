@@ -55,3 +55,27 @@ class UserProfileForm(forms.ModelForm):
             'company': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+class VacancyEditForm(forms.ModelForm):
+    class Meta:
+        model = Vacancy
+        fields = [
+            'company', 'geo', 'specialization', 'grade',
+            'salary_min', 'salary_max', 'currency', 'gross_net',
+            'bonus', 'bonus_conditions', 'work_format',
+            'description'
+        ]
+        widgets = {
+            'company': forms.TextInput(attrs={'class': 'form-control'}),
+            'geo': forms.TextInput(attrs={'class': 'form-control'}),
+            'specialization': forms.TextInput(attrs={'class': 'form-control'}),
+            'grade': forms.TextInput(attrs={'class': 'form-control'}),
+            'salary_min': forms.NumberInput(attrs={'class': 'form-control'}),
+            'salary_max': forms.NumberInput(attrs={'class': 'form-control'}),
+            'currency': forms.TextInput(attrs={'class': 'form-control'}),
+            'gross_net': forms.TextInput(attrs={'class': 'form-control'}),
+            'bonus': forms.TextInput(attrs={'class': 'form-control'}),
+            'bonus_conditions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'work_format': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+        }
