@@ -2,6 +2,9 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .utils import unify_currency, unify_grade
 from simple_history.models import HistoricalRecords
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Vacancy(models.Model):
@@ -81,3 +84,16 @@ class GeminiPrompt(models.Model):
 class TaskQueue(models.Model):
     data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+class ExchangeRate(models.Model):
+    currency = models.CharField('Валюта', max_length=3, unique=True)
+    rate = models.DecimalField('Курс к BYN', max_digits=10, decimal_places=4)
+    updated_at = models.DateTimeField('Дата обновления', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Курс валюты'
+        verbose_name_plural = 'Курсы валют'
+        ordering = ['currency']
+
+    def __str__(self):
+        return f'{self.currency}: {self.rate} BYN'

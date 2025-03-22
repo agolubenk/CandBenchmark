@@ -2,8 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 import openpyxl
 import logging
+import requests
+from datetime import datetime, timedelta
+from django.core.cache import cache
+from django.utils import timezone
 
-from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue
+from vacancies.models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue, ExchangeRate
 from vacancies.forms import GeminiInputForm, GeminiPromptForm
 from django.contrib import messages
 
@@ -121,22 +125,21 @@ def change_prompt(request):
     gemini_prompt_obj = GeminiPrompt.objects.first()
     if not gemini_prompt_obj:
         default_prompt = (
-            "Проанализируй следующий текст о вакансии и верни результат в виде JSON-объекта с указанными ключами. "
-            "JSON должен содержать следующие поля:\n"
-            "- 'Company': название компании.\n"
-            "- 'Geo': местоположение компании или вакансии.\n"
-            "- 'Specialization': специализация или направление работы.\n"
-            "- 'Grade': уровень должности.\n"
-            "- 'Salary Min': минимальная зарплата.\n"
-            "- 'Salary Max': максимальная зарплата.\n"
-            "- 'Bonus': размер бонуса.\n"
-            "- 'Bonus Conditions': условия предоставления бонуса.\n"
-            "- 'Currency': валюта расчёта.\n"
-            "- 'Gross/Net': информация о типе оплаты (до вычета/после вычета налогов).\n"
-            "- 'Work Format': формат работы (удаленная, офис и др.).\n"
-            "- 'Date Posted': дата публикации вакансии.\n"
-            "- 'Source': источник вакансии.\n"
-            "- 'Author': автор публикации вакансии.\n\n"
+            "Проанализируй следующий текст о вакансии и верни результат в виде JSON-объекта с указанными ключами. JSON должен содержать следующие поля:\n"
+            "'Company': название компании.\n"
+            "'Geo': местоположение компании или вакансии. Определяется по тексту. В ответе возвращается название всех стран, где есть офисы/представление, через запятую.\n"
+            "'Specialization': специализация или направление работы. Выбирается из списка наиболее подходящая из названия или описания :Product Owner, Digital Product Owner, Project Manager, Scrum Master, Business Analyst, System Analyst, UX Researcher, UX/UI Designer, UX Writer, Enterprise Architect, Security Architect, Data Architect, SecOps Engineer, AppSec Engineer, DevOps Engineer, System Administrator, Relational Database Administrator, NoSQL Database Administrator, Network Engineer (Cisco), Cyber Security Engineer, Web Developer, Android Developer, iOS Developer, Kotlin Multiplatform Engineer, Java Developer, C# / .NET Developer, Python Developer, Erlang / Elixir Developer, Full-Stack Developer, RPA Developer, HCL/Lotus Notes Developer, 1C Developer, EQ / RPG Analyst, EQ / RPG Developer, Web QA, Mobile QA, Load / Performance QA, Release Manager, Data Analyst, Web Analyst, MLOps Engineer, DS / ML Engineer, AI Engineer, Technical Support Engineer, IT Auditor, Monitoring Engineer, Penetration Tester, Security Auditor, Digital Marketer, Internet Marketer, SOC Engineer, SIEM Engineer, Data Engineer, BI Analyst, Marketing Analyst.\n"
+            "'Grade': уровень должности (если не указан, то определяется на основании описания и требуемого опыта).\n"
+            "'Salary Min': минимальная зарплата (если не указана, то None).\n"
+            "'Salary Max': максимальная зарплата (если не указана, то None).\n"
+            "'Bonus': размер бонуса, если нет, то None.\n"
+            "'Bonus Conditions': условия предоставления бонуса, если нет, то None.\n"
+            "'Currency': валюта расчёта в формате USD, RUB и так далее.\n"
+            "'Gross/Net': информация о типе оплаты (до вычета/после вычета налогов, net=на руки, чистыми, gross=грязыми, до вычета налогов. Если не указано, то по определению gross)\n"
+            "'Work Format': формат работы (возможные: удаленная, офис, релокация, гибрид).\n"
+            "'Date Posted': дата публикации вакансии (сейчас).\n"
+            "'Source': источник вакансии (из формы, hh, tg)\n"
+            "'Author': автор публикации вакансии.\n\n"
             "Не добавляй никаких дополнительных полей или комментариев. Верни только валидный JSON-объект.\n\n"
             "Текст: "
         )
@@ -209,24 +212,28 @@ def pivot_summary(request):
     # Функция для конвертации в BYN (пример «заглушки»)
     def convert_to_byn(amount, ccy):
         """
-        Примерные курсы:
-         - 1 USD = 2.5 BYN
-         - 1 EUR = 2.6 BYN
-         - 1 RUB = 0.033 BYN
-         - BYN оставляем как есть
-         - Если не знаем валюту, оставляем как есть
+        Конвертирует сумму в BYN по актуальному курсу НБРБ.
+        Использует кэшированные значения курсов, обновляемые каждые 3 часа.
+        
+        Args:
+            amount: сумма для конвертации
+            ccy: валюта (USD, EUR, RUB, BYN)
+        
+        Returns:
+            float: сумма в BYN
         """
         if amount is None:
             return None
-        if ccy == 'USD':
-            return amount * 2.5
-        elif ccy == 'EUR':
-            return amount * 2.6
-        elif ccy == 'RUB':
-            return amount * 0.033
-        elif ccy == 'BYN':
+        
+        if ccy == 'BYN':
             return amount
-        # если неизвестная валюта, не меняем
+        
+        rates = get_exchange_rates()
+        
+        if ccy in rates:
+            return amount * rates[ccy]
+        
+        # Если валюта неизвестна, возвращаем исходную сумму
         return amount
 
     # 1) Сгруппируем по (spec, grade, geo, currency) -> получим "gross" значения
@@ -346,11 +353,19 @@ def pivot_summary(request):
             'byn_market_median': int(round(market_median)) if market_median is not None else None,
         })
 
+    # Получаем все уникальные валюты из результатов
+    currencies = set()
+    for row in results_gross:
+        if 'currency' in row and row['currency']:
+            currencies.add(row['currency'])
+    
+    # Получаем курсы только для используемых валют
+    exchange_rates = ExchangeRate.objects.filter(currency__in=currencies).order_by('currency')
+    
     context = {
-        # Первую таблицу отображаем из results_gross
         'results_gross': results_gross,
-        # Вторую таблицу отображаем из results_byn
         'results_byn': results_byn,
+        'exchange_rates': exchange_rates,
         'spec_filter': spec_filter,
         'grade_filter': grade_filter,
         'geo_filter': geo_filter,
@@ -458,3 +473,40 @@ def process_excel(request):
     messages.success(request, f"Строки успешно добавлены в обработку.")
     request.session.pop('excel_rows', None)
     return redirect('index')
+
+
+def get_exchange_rates():
+    """
+    Получает курсы валют из базы данных.
+    Возвращает словарь с курсами валют.
+    Если курсы устарели (старше 24 часов), возвращает резервные значения.
+    """
+    cache_key = 'exchange_rates'
+    rates = cache.get(cache_key)
+    
+    if rates is None:
+        try:
+            # Получаем все курсы из БД
+            db_rates = ExchangeRate.objects.all()
+            rates = {}
+            
+            # Проверяем актуальность курсов
+            day_ago = timezone.now() - timedelta(days=1)
+            
+            for rate in db_rates:
+                if rate.updated_at >= day_ago:
+                    rates[rate.currency] = float(rate.rate)
+            
+            # Если есть актуальные курсы, кэшируем их на 1 час
+            if rates:
+                cache.set(cache_key, rates, timeout=3600)
+            else:
+                # Если курсы устарели, используем резервные значения
+                rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033}
+                
+        except Exception as e:
+            logger.error(f"Ошибка при получении курсов валют из БД: {e}")
+            # В случае ошибки используем резервные значения
+            rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033}
+    
+    return rates

@@ -32,6 +32,33 @@
         border-top: none;
         border-radius: 0 0 8px 8px;
     }
+    .exchange-rate-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    .exchange-rate-btn:hover {
+        transform: scale(1.1);
+        background-color: #0b5ed7;
+        color: white;
+    }
+    .exchange-rate-table {
+        margin: 0;
+    }
+    .exchange-rate-table td, .exchange-rate-table th {
+        padding: 0.5rem 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -39,6 +66,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Анимация кнопки курсов валют
+        const exchangeRateBtn = document.querySelector('.exchange-rate-btn');
+        exchangeRateBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1) rotate(15deg)';
+        });
+        exchangeRateBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1) rotate(0deg)';
+        });
+
         // Весь ваш существующий JavaScript код
         const specializationInput = document.getElementById("specialization");
         const gradeInput = document.getElementById("grade");
@@ -116,6 +152,45 @@
 {% endblock %}
 
 {% block content %}
+<!-- Кнопка для открытия модального окна -->
+<a href="#" class="exchange-rate-btn" data-bs-toggle="modal" data-bs-target="#exchangeRatesModal" title="Курсы валют">
+    <i class="bi bi-currency-exchange"></i>
+</a>
+
+<!-- Модальное окно с курсами валют -->
+<div class="modal fade" id="exchangeRatesModal" tabindex="-1" aria-labelledby="exchangeRatesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exchangeRatesModalLabel">
+                    <i class="bi bi-currency-exchange"></i> Актуальные курсы валют
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped exchange-rate-table">
+                    <thead>
+                        <tr>
+                            <th>Валюта</th>
+                            <th>Курс к BYN</th>
+                            <th>Обновлено</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rate in exchange_rates %}
+                        <tr>
+                            <td>{{ rate.currency }}</td>
+                            <td>{{ rate.rate }}</td>
+                            <td>{{ rate.updated_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Весь ваш существующий HTML код из body, начиная с container -->
 <div class="container">
     <h3 class="mb-2">Сводная статистика по вакансиям</h3>

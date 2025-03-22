@@ -1,9 +1,15 @@
 from django.contrib import admin
-from .models import Vacancy, GeminiResult, GeminiPrompt
+from .models import Vacancy, GeminiResult, GeminiPrompt, TaskQueue, ExchangeRate
 from simple_history.admin import SimpleHistoryAdmin
 
 admin.site.register(GeminiResult)
 admin.site.register(GeminiPrompt, SimpleHistoryAdmin)  # Регистрируем модель GeminiPrompt
+
+@admin.register(ExchangeRate)
+class ExchangeRateAdmin(admin.ModelAdmin):
+    list_display = ('currency', 'rate', 'updated_at')
+    readonly_fields = ('updated_at',)
+    search_fields = ('currency',)
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
