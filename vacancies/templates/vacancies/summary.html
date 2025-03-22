@@ -107,193 +107,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-    // Функция для скачивания графиков в PDF
-    async function downloadChartsPDF() {
-        try {
-            console.log('Начало создания PDF...');
-            
-            // Переключаемся на вкладку с графиками
-            document.querySelector('#infographics-tab').click();
-            console.log('Переключились на вкладку с графиками');
-            
-            // Ждем немного, чтобы графики отрендерились
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Получаем текущую дату и время
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('ru-RU');
-            const timeStr = now.toLocaleTimeString('ru-RU');
-            
-            // Создаем PDF документ с поддержкой кириллицы
-            const { jsPDF } = window.jspdf;
-            if (!jsPDF) {
-                throw new Error('jsPDF не найден');
-            }
-            const pdf = new jsPDF({
-                orientation: 'p',
-                unit: 'mm',
-                format: 'a4',
-                putOnlyUsedFonts: true,
-                floatPrecision: 16
-            });
-
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            
-            // Получаем графики
-            const charts = document.querySelectorAll('#infographics .chart-container canvas');
-            console.log('Найдено графиков:', charts.length);
-            
-            if (charts.length === 0) {
-                throw new Error('Графики не найдены');
-            }
-            
-            let yOffset = 10;
-            for (const chart of charts) {
-                console.log('Обработка графика...');
-                const canvas = await html2canvas(chart, {
-                    scale: 2,
-                    backgroundColor: '#ffffff'
-                });
-                
-                // Конвертируем canvas в изображение
-                const imgData = canvas.toDataURL('image/png');
-                
-                // Если нужна новая страница
-                if (yOffset > 200) {
-                    // Добавляем подпись перед новой страницей
-                    addFooter(pdf, dateStr, timeStr);
-                    pdf.addPage();
-                    yOffset = 10;
-                }
-                
-                // Добавляем изображение в PDF
-                pdf.addImage(imgData, 'PNG', 10, yOffset, 190, 80);
-                yOffset += 90;
-            }
-
-            // Добавляем подпись на странице с графиками
-            addFooter(pdf, dateStr, timeStr);
-            
-            // Добавляем новую страницу для таблицы
-            pdf.addPage();
-            
-            // Получаем данные из таблицы BYN
-            const table = document.getElementById('tableBYN');
-            const rows = Array.from(table.querySelectorAll('tr'));
-            
-            // Настройки для таблицы
-            pdf.setFontSize(12);
-            pdf.setTextColor(0, 0, 0);
-            
-            // Добавляем заголовок таблицы
-            pdf.setFontSize(14);
-            const title = 'Сводная таблица зарплат (BYN)';
-            const titleWidth = pdf.getStringUnitWidth(title) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
-            pdf.text(title, (pageWidth - titleWidth) / 2, 20);
-            pdf.setFontSize(12);
-            
-            let startY = 30;
-            const cellPadding = 2;
-            const fontSize = 8;
-            pdf.setFontSize(fontSize);
-            
-            // Ширина колонок
-            const colWidths = [30, 35, 20, 30, 30, 35];
-            const headers = ['Гео', 'Специализация', 'Грейд', 'Минимум', 'Максимум', 'Медиана'];
-            
-            // Рисуем заголовки
-            let currentX = 10;
-            headers.forEach((header, i) => {
-                pdf.setFillColor(240, 240, 240);
-                pdf.rect(currentX, startY, colWidths[i], 7, 'F');
-                const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
-                pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
-                currentX += colWidths[i];
-            });
-            
-            startY += 7;
-            
-            // Добавляем данные
-            rows.slice(1).forEach((row, rowIndex) => {
-                const cells = Array.from(row.querySelectorAll('td'));
-                
-                // Проверяем, нужна ли новая страница
-                if (startY > pageHeight - 20) {
-                    addFooter(pdf, dateStr, timeStr);
-                    pdf.addPage();
-                    startY = 20;
-                    
-                    // Повторяем заголовки на новой странице
-                    currentX = 10;
-                    headers.forEach((header, i) => {
-                        pdf.setFillColor(240, 240, 240);
-                        pdf.rect(currentX, startY, colWidths[i], 7, 'F');
-                        const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
-                        pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
-                        currentX += colWidths[i];
-                    });
-                    startY += 7;
-                }
-                
-                // Добавляем строку данных
-                currentX = 10;
-                cells.slice(0, 6).forEach((cell, i) => {
-                    const text = cell.textContent.trim() || '--';
-                    const textWidth = pdf.getStringUnitWidth(text) * fontSize / pdf.internal.scaleFactor;
-                    pdf.text(text, currentX + (colWidths[i] - textWidth) / 2, startY + 5);
-                    currentX += colWidths[i];
-                });
-                
-                startY += 7;
-            });
-            
-            // Добавляем подпись на последней странице
-            addFooter(pdf, dateStr, timeStr);
-            
-            // Сохраняем PDF
-            pdf.save('vacancy_stats.pdf');
-            console.log('PDF успешно создан');
-            
-        } catch (error) {
-            console.error('Ошибка:', error);
-            alert('Ошибка при создании PDF: ' + error.message);
-        }
-    }
-
-    // Функция для добавления нижнего колонтитула
-    function addFooter(pdf, dateStr, timeStr) {
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        
-        pdf.setFontSize(10);
-        pdf.setTextColor(128, 128, 128); // Серый цвет для подписи
-        
-        // Добавляем подпись
-        const signature = 'Market Benchmark from @agolubenk';
-        const datetime = `Создано: ${dateStr} ${timeStr}`;
-        
-        // Вычисляем ширину текста для центрирования
-        const signatureWidth = pdf.getStringUnitWidth(signature) * 10 / pdf.internal.scaleFactor;
-        const datetimeWidth = pdf.getStringUnitWidth(datetime) * 10 / pdf.internal.scaleFactor;
-        
-        // Добавляем подпись и дату/время
-        pdf.text(signature, (pageWidth - signatureWidth) / 2, pageHeight - 15);
-        pdf.text(datetime, (pageWidth - datetimeWidth) / 2, pageHeight - 10);
-    }
-
     document.addEventListener("DOMContentLoaded", function() {
-        // Анимация кнопки курсов валют
+        // Объявляем все переменные в начале
+        let barChart, lineChart, pieChart;
+        let isRBFilterActive = false;
+        
+        // Получаем все необходимые элементы
+        const filterByRBButton = document.getElementById("filterByRB");
+        const showAllButton = document.getElementById("showAll");
         const exchangeRateBtn = document.querySelector('.exchange-rate-btn');
-        exchangeRateBtn.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1) rotate(15deg)';
-        });
-        exchangeRateBtn.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1) rotate(0deg)';
-        });
+        const downloadBtn = document.getElementById('downloadChartsPDF');
+        const specializationInput = document.getElementById("specialization");
+        const gradeInput = document.getElementById("grade");
+        const geoInput = document.getElementById("geo");
+
+        // Анимация кнопки курсов валют
+        if (exchangeRateBtn) {
+            exchangeRateBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1) rotate(15deg)';
+            });
+            exchangeRateBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        }
 
         // Добавляем обработчик для кнопки скачивания PDF
-        const downloadBtn = document.getElementById('downloadChartsPDF');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -302,14 +140,7 @@
             });
         }
 
-        // Весь ваш существующий JavaScript код
-        const specializationInput = document.getElementById("specialization");
-        const gradeInput = document.getElementById("grade");
-        const geoInput = document.getElementById("geo");
-        const filterByRBButton = document.getElementById("filterByRB");
-        const showAllButton = document.getElementById("showAll");
-        let isRBFilterActive = false;
-
+        // Функция для фильтрации таблиц
         function filterTables() {
             const specializationFilter = specializationInput.value.toLowerCase();
             const gradeFilter = gradeInput.value.toLowerCase();
@@ -340,12 +171,17 @@
                     row.style.display = visible ? "" : "none";
                 }
             });
+            
+            // После фильтрации обновляем графики
+            updateCharts();
         }
 
+        // Добавляем обработчики событий для фильтров
         specializationInput.addEventListener("input", filterTables);
         gradeInput.addEventListener("input", filterTables);
         geoInput.addEventListener("input", filterTables);
 
+        // Обработчики для кнопок фильтрации по РБ
         filterByRBButton.addEventListener("click", function() {
             isRBFilterActive = true;
             filterByRBButton.classList.add("d-none");
@@ -360,24 +196,212 @@
             filterTables();
         });
 
-        // Обработчики экспорта
-        document.getElementById("exportGross").addEventListener("click", function(e) {
-            e.preventDefault();
-            const table = document.getElementById("tableGross");
-            const wb = XLSX.utils.table_to_book(table, { sheet: "Gross" });
-            XLSX.writeFile(wb, "vacancies_gross.xlsx");
-        });
+        // Функция для скачивания графиков в PDF
+        async function downloadChartsPDF() {
+            try {
+                console.log('Начало создания PDF...');
+                
+                // Переключаемся на вкладку с графиками
+                document.querySelector('#infographics-tab').click();
+                console.log('Переключились на вкладку с графиками');
+                
+                // Ждем немного, чтобы графики отрендерились
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Получаем текущую дату и время
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ru-RU');
+                const timeStr = now.toLocaleTimeString('ru-RU');
+                
+                // Создаем PDF документ
+                const { jsPDF } = window.jspdf;
+                if (!jsPDF) {
+                    throw new Error('jsPDF не найден');
+                }
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4',
+                    putOnlyUsedFonts: true,
+                    floatPrecision: 16
+                });
 
-        document.getElementById("exportBYN").addEventListener("click", function(e) {
-            e.preventDefault();
-            const table = document.getElementById("tableBYN");
-            const wb = XLSX.utils.table_to_book(table, { sheet: "BYN" });
-            XLSX.writeFile(wb, "vacancies_byn.xlsx");
-        });
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                
+                // Получаем графики
+                const charts = document.querySelectorAll('#infographics .chart-container canvas');
+                console.log('Найдено графиков:', charts.length);
+                
+                if (charts.length === 0) {
+                    throw new Error('Графики не найдены');
+                }
+                
+                let yOffset = 10;
+                for (const chart of charts) {
+                    console.log('Обработка графика...');
+                    const canvas = await html2canvas(chart, {
+                        scale: 2,
+                        backgroundColor: '#ffffff'
+                    });
+                    
+                    // Конвертируем canvas в изображение
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Если нужна новая страница
+                    if (yOffset > 200) {
+                        addFooter(pdf, dateStr, timeStr);
+                        pdf.addPage();
+                        yOffset = 10;
+                    }
+                    
+                    // Добавляем изображение в PDF
+                    pdf.addImage(imgData, 'PNG', 10, yOffset, 190, 80);
+                    yOffset += 90;
+                }
 
-        // Объявляем переменные для хранения экземпляров графиков
-        let barChart, lineChart, pieChart;
-        
+                // Добавляем подпись на странице с графиками
+                addFooter(pdf, dateStr, timeStr);
+                
+                // Добавляем новую страницу для таблицы
+                pdf.addPage();
+                
+                // Получаем только видимые строки из таблицы BYN
+                const table = document.getElementById('tableBYN');
+                const visibleRows = Array.from(table.querySelectorAll('tbody tr')).filter(row => 
+                    row.style.display !== 'none'
+                );
+                
+                // Настройки для таблицы
+                pdf.setFontSize(12);
+                pdf.setTextColor(0, 0, 0);
+                
+                // Добавляем заголовок таблицы и текущие фильтры
+                pdf.setFontSize(14);
+                const title = 'Сводная таблица зарплат (BYN)';
+                const titleWidth = pdf.getStringUnitWidth(title) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
+                pdf.text(title, (pageWidth - titleWidth) / 2, 20);
+
+                // Добавляем информацию о примененных фильтрах
+                pdf.setFontSize(10);
+                const filters = {
+                    specialization: specializationInput.value,
+                    grade: gradeInput.value,
+                    geo: geoInput.value
+                };
+                let filterY = 30;
+                
+                // Добавляем заголовок фильтров
+                pdf.text('Примененные фильтры:', 10, filterY);
+                filterY += 5;
+                
+                // Добавляем значения фильтров
+                Object.entries(filters).forEach(([key, value]) => {
+                    if (value) {
+                        const filterLabel = {
+                            specialization: 'Специализация',
+                            grade: 'Грейд',
+                            geo: 'Локация'
+                        }[key];
+                        pdf.text(`${filterLabel}: ${value}`, 10, filterY);
+                        filterY += 5;
+                    }
+                });
+                
+                if (isRBFilterActive) {
+                    pdf.text('Только Беларусь', 10, filterY);
+                    filterY += 5;
+                }
+                
+                // Настройки для таблицы
+                let startY = filterY + 5;
+                const fontSize = 8;
+                pdf.setFontSize(fontSize);
+                
+                // Ширина колонок
+                const colWidths = [30, 35, 20, 30, 30, 35];
+                const headers = ['Гео', 'Специализация', 'Грейд', 'Минимум', 'Максимум', 'Медиана'];
+                
+                // Рисуем заголовки
+                let currentX = 10;
+                headers.forEach((header, i) => {
+                    pdf.setFillColor(240, 240, 240);
+                    pdf.rect(currentX, startY, colWidths[i], 7, 'F');
+                    const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
+                    pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
+                    currentX += colWidths[i];
+                });
+                
+                startY += 7;
+                
+                // Добавляем только видимые строки
+                visibleRows.forEach((row, rowIndex) => {
+                    const cells = Array.from(row.querySelectorAll('td'));
+                    
+                    // Проверяем, нужна ли новая страница
+                    if (startY > pageHeight - 20) {
+                        addFooter(pdf, dateStr, timeStr);
+                        pdf.addPage();
+                        startY = 20;
+                        
+                        // Повторяем заголовки на новой странице
+                        currentX = 10;
+                        headers.forEach((header, i) => {
+                            pdf.setFillColor(240, 240, 240);
+                            pdf.rect(currentX, startY, colWidths[i], 7, 'F');
+                            const headerWidth = pdf.getStringUnitWidth(header) * fontSize / pdf.internal.scaleFactor;
+                            pdf.text(header, currentX + (colWidths[i] - headerWidth) / 2, startY + 5);
+                            currentX += colWidths[i];
+                        });
+                        startY += 7;
+                    }
+                    
+                    // Добавляем строку данных
+                    currentX = 10;
+                    cells.forEach((cell, i) => {
+                        const text = cell.textContent.trim() || '--';
+                        const textWidth = pdf.getStringUnitWidth(text) * fontSize / pdf.internal.scaleFactor;
+                        pdf.text(text, currentX + (colWidths[i] - textWidth) / 2, startY + 5);
+                        currentX += colWidths[i];
+                    });
+                    
+                    startY += 7;
+                });
+                
+                // Добавляем подпись на последней странице
+                addFooter(pdf, dateStr, timeStr);
+                
+                // Сохраняем PDF
+                pdf.save('vacancy_stats.pdf');
+                console.log('PDF успешно создан');
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при создании PDF: ' + error.message);
+            }
+        }
+
+        // Функция для добавления нижнего колонтитула
+        function addFooter(pdf, dateStr, timeStr) {
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            
+            pdf.setFontSize(10);
+            pdf.setTextColor(128, 128, 128); // Серый цвет для подписи
+            
+            // Добавляем подпись
+            const signature = 'Market Benchmark from @agolubenk';
+            const datetime = `Создано: ${dateStr} ${timeStr}`;
+            
+            // Вычисляем ширину текста для центрирования
+            const signatureWidth = pdf.getStringUnitWidth(signature) * 10 / pdf.internal.scaleFactor;
+            const datetimeWidth = pdf.getStringUnitWidth(datetime) * 10 / pdf.internal.scaleFactor;
+            
+            // Добавляем подпись и дату/время
+            pdf.text(signature, (pageWidth - signatureWidth) / 2, pageHeight - 15);
+            pdf.text(datetime, (pageWidth - datetimeWidth) / 2, pageHeight - 10);
+        }
+
         // Функция для фильтрации данных графиков
         function filterChartData(data, filters) {
             return data.filter(item => {
@@ -397,9 +421,9 @@
         // Функция обновления графиков с учетом фильтров
         function updateCharts() {
             const filters = {
-                specialization: document.getElementById("specialization").value,
-                grade: document.getElementById("grade").value,
-                geo: document.getElementById("geo").value,
+                specialization: specializationInput.value,
+                grade: gradeInput.value,
+                geo: geoInput.value,
                 onlyRB: isRBFilterActive
             };
 
@@ -451,30 +475,7 @@
             }
         }
 
-        // Добавляем обработчики событий для фильтров
-        const filterInputs = ["specialization", "grade", "geo"].map(id => document.getElementById(id));
-        filterInputs.forEach(input => {
-            if (input) {
-                input.addEventListener("input", updateCharts);
-            }
-        });
-
-        // Обработчики для кнопок "Только РБ" и "Показать все"
-        if (filterByRBButton) {
-            filterByRBButton.addEventListener("click", function() {
-                isRBFilterActive = true;
-                updateCharts();
-            });
-        }
-
-        if (showAllButton) {
-            showAllButton.addEventListener("click", function() {
-                isRBFilterActive = false;
-                updateCharts();
-            });
-        }
-
-        // Исходные данные для графиков
+        // Инициализация графиков
         const originalBarData = [
             { geo: 'Беларусь', median: 3500 },
             { geo: 'Россия', median: 4200 },
