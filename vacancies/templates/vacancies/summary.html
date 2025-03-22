@@ -76,13 +76,96 @@
         display: grid;
         gap: 30px;
     }
+    .download-pdf-btn {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #198754;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    .download-pdf-btn:hover {
+        transform: scale(1.1);
+        background-color: #157347;
+        color: white;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
+    // Функция для скачивания графиков в PDF
+    async function downloadChartsPDF() {
+        try {
+            console.log('Начало создания PDF...');
+            
+            // Переключаемся на вкладку с графиками
+            document.querySelector('#infographics-tab').click();
+            console.log('Переключились на вкладку с графиками');
+            
+            // Ждем немного, чтобы графики отрендерились
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Создаем PDF документ
+            const { jsPDF } = window.jspdf;
+            if (!jsPDF) {
+                throw new Error('jsPDF не найден');
+            }
+            const pdf = new jsPDF();
+            
+            // Получаем графики
+            const charts = document.querySelectorAll('#infographics .chart-container canvas');
+            console.log('Найдено графиков:', charts.length);
+            
+            if (charts.length === 0) {
+                throw new Error('Графики не найдены');
+            }
+            
+            let yOffset = 10;
+            for (const chart of charts) {
+                console.log('Обработка графика...');
+                const canvas = await html2canvas(chart, {
+                    scale: 2,
+                    backgroundColor: '#ffffff'
+                });
+                
+                // Конвертируем canvas в изображение
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Если нужна новая страница
+                if (yOffset > 200) {
+                    pdf.addPage();
+                    yOffset = 10;
+                }
+                
+                // Добавляем изображение в PDF
+                pdf.addImage(imgData, 'PNG', 10, yOffset, 190, 80);
+                yOffset += 90;
+            }
+            
+            // Сохраняем PDF
+            pdf.save('vacancy_stats.pdf');
+            console.log('PDF успешно создан');
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка при создании PDF: ' + error.message);
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         // Анимация кнопки курсов валют
         const exchangeRateBtn = document.querySelector('.exchange-rate-btn');
@@ -92,6 +175,16 @@
         exchangeRateBtn.addEventListener('mouseleave', function() {
             this.style.transform = 'scale(1) rotate(0deg)';
         });
+
+        // Добавляем обработчик для кнопки скачивания PDF
+        const downloadBtn = document.getElementById('downloadChartsPDF');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Клик по кнопке скачивания PDF');
+                downloadChartsPDF();
+            });
+        }
 
         // Весь ваш существующий JavaScript код
         const specializationInput = document.getElementById("specialization");
@@ -348,6 +441,14 @@
 {% endblock %}
 
 {% block content %}
+<!-- Скрытый элемент с именем пользователя -->
+<span id="current_username" style="display: none;">{{ request.user.get_full_name|default:request.user.username }}</span>
+
+<!-- Кнопка для скачивания PDF -->
+<a href="#" id="downloadChartsPDF" class="download-pdf-btn" title="Скачать графики в PDF">
+    <i class="bi bi-file-pdf"></i>
+</a>
+
 <!-- Кнопка для открытия модального окна -->
 <a href="#" class="exchange-rate-btn" data-bs-toggle="modal" data-bs-target="#exchangeRatesModal" title="Курсы валют">
     <i class="bi bi-currency-exchange"></i>
