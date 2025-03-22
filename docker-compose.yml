@@ -17,8 +17,8 @@ services:
   redis:
     image: redis:7.2.5-alpine
     restart: always
-    expose:
-      - 6379
+    ports:
+      - "6379:6379"
   celery-worker:
     <<: *default-python
     command: python3 -m celery -A CandBenchmark worker -l info
@@ -38,7 +38,7 @@ services:
              python3 manage.py collectstatic --noinput &&
              python3 manage.py runserver 0.0.0.0:8000"
     ports:
-      - 8000:8000
+      - "8001:8000"
     depends_on:
       - redis
   bot:

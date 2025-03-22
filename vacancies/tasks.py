@@ -97,7 +97,7 @@ def analyze_text(text):
 @shared_task
 def execute_batches():
     batch_size = 10
-    tasks = TaskQueue.objects.all()[:batch_size]
+    tasks = TaskQueue.objects.all().order_by('priority', 'id')[:batch_size]
 
     if tasks:
         batch = [task.data for task in tasks]
@@ -111,7 +111,7 @@ def process_hhru_data(vacancy_text):
     Задача для обработки данных, полученных из скрапера HH.ru
     """
     try:
-        TaskQueue.objects.create(data=vacancy_text)
+        TaskQueue.create(data=vacancy_text)
         logger.info("Данные вакансии с HH.ru успешно добавлены в очередь")
     except Exception as e:
         logger.exception("Ошибка при добавлении данных HH.ru в очередь: %s", e)

@@ -82,8 +82,20 @@ class GeminiPrompt(models.Model):
         verbose_name_plural = "Промпт для AI"
 
 class TaskQueue(models.Model):
+    class Priority(models.IntegerChoices):
+        LOW = 50, 'Low'
+        MEDIUM = 25, 'Medium'
+        HIGH = 5, 'High'
+        CRITICAL = 0, 'Critical'
+
     data = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    priority = models.IntegerField(choices=Priority.choices, default=Priority.LOW, null=False, blank=True)
+
+    @classmethod
+    def create(cls, data, priority=Priority.LOW):
+        cls.objects.create(data=data, priority=priority)
+
 
 class ExchangeRate(models.Model):
     currency = models.CharField('Валюта', max_length=3, unique=True)
@@ -137,7 +149,6 @@ def create_user_profile(sender, instance, created, **kwargs):
             user=instance,
             first_name=instance.first_name,
             last_name=instance.last_name,
-            _skip_user_save=True
         )
 
 @receiver(post_save, sender=User)

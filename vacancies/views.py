@@ -110,7 +110,7 @@ def gemini(request):
     if request.method == 'POST':
         form = GeminiInputForm(request.POST)
         if form.is_valid():
-            TaskQueue.objects.create(data=form.cleaned_data['text'])
+            TaskQueue.create(data=form.cleaned_data['text'], priority=TaskQueue.Priority.CRITICAL)
             return redirect("gemini_result")
     else:
         form = GeminiInputForm()
@@ -469,7 +469,7 @@ def process_excel(request):
         return redirect('upload_excel')
 
     for row in rows_data[1:]:
-        TaskQueue.objects.create(data=" | ".join(row))
+        TaskQueue.create(data=" | ".join(row), priority=TaskQueue.Priority.MEDIUM)
 
     messages.success(request, f"Строки успешно добавлены в обработку.")
     request.session.pop('excel_rows', None)

@@ -143,6 +143,7 @@ class VacancyAdmin(admin.ModelAdmin):
     list_display = ('company', 'specialization', 'grade', 'salary_min', 'salary_max', 'currency', 'date_posted')
     list_filter = ('grade', 'currency', 'date_posted')
     search_fields = ('company', 'specialization', 'description')
+    ordering = ('-id',)
 
 @admin.register(GeminiResult)
 class GeminiResultAdmin(admin.ModelAdmin):
