@@ -45,8 +45,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 @sync_to_async
 def save_task(data):
     try:
-        task = TaskQueue.create(data=data, priority=TaskQueue.Priority.HIGH)
-        task.save()
+        task = TaskQueue.objects.create(data=data, priority=TaskQueue.Priority.HIGH)
         return "Задача на обработку вакансии успешно добавлена!"
     except Exception as e:
         error_text = f"Ошибка при сохранении задачи на обработку: {e}"

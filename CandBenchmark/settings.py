@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'hhru',
     'rest_framework',
     'simple_history',
+    'django_crontab',
+
 ]
 
 MIDDLEWARE = [
@@ -100,6 +102,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+MEDIA_URL = "/media/"
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -139,3 +143,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 минут максимальное вр�
 
 GEMINI_API_URL = os.getenv('GEMINI_API_URL')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+CRONJOBS = [
+    ('/2 0 * * *', 'vacancies.views.get_exchange_rates')
+]
