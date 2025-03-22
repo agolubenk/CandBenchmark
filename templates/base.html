@@ -75,7 +75,14 @@
                 <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-wrench-adjustable-circle"></i> Админ-панель</a></li>
                 {% endif %}
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Выйти</a></li>
+                <li>
+                    <form action="{% url 'logout' %}" method="post" id="logout-form">
+                        {% csrf_token %}
+                        <a class="dropdown-item text-danger" href="#" onclick="document.getElementById('logout-form').submit()">
+                            <i class="bi bi-box-arrow-right"></i> Выйти
+                        </a>
+                    </form>
+                </li>
               </ul>
             </li>
             {% endif %}
