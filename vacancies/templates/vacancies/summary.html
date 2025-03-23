@@ -535,37 +535,84 @@
 
         // Функция обновления графиков с учетом фильтров
         function updateCharts() {
-            const filters = {
-                specialization: specializationInput.value,
-                grade: gradeInput.value,
-                geo: geoInput.value,
-                onlyRB: isRBFilterActive
-            };
-
-            console.log('Применяем фильтры:', filters);
+            // Получаем отфильтрованные строки из таблицы
+            const filteredRows = Array.from(tableBYN.querySelectorAll('tbody tr'))
+                .filter(row => row.style.display !== 'none');
 
             // Обновляем столбчатый график
             if (barChart) {
-                const filteredBarData = filterChartData(originalBarData, filters);
-                barChart.data.labels = filteredBarData.map(item => item.geo);
-                barChart.data.datasets[0].data = filteredBarData.map(item => item.median);
+                // Собираем данные по странам
+                const countryData = {};
+                filteredRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const geoCell = cells[0].textContent;
+                    const marketMedian = cells[5].textContent.trim();
+                    
+                    if (marketMedian === '--') return;
+                    
+                    const countries = extractCountries(geoCell);
+                    countries.forEach(country => {
+                        if (!countryData[country]) {
+                            countryData[country] = [];
+                        }
+                        countryData[country].push(parseFloat(marketMedian));
+                    });
+                });
+
+                // Формируем данные для графика
+                const barData = Object.entries(countryData)
+                    .map(([country, salaries]) => ({
+                        geo: country,
+                        median: calculateMedian(salaries)
+                    }))
+                    .filter(item => item.median !== null)
+                    .sort((a, b) => b.median - a.median);
+
+                // Обновляем данные графика
+                barChart.data.labels = barData.map(item => item.geo);
+                barChart.data.datasets[0].data = barData.map(item => item.median);
                 barChart.update();
             }
 
             // Обновляем линейный график
             if (lineChart) {
-                const filteredLineData = filterChartData(originalLineData, filters);
-                const uniqueSpecializations = [...new Set(filteredLineData.map(item => item.specialization))];
-                const uniqueCountries = ['Беларусь', 'Россия', 'Польша'].filter(country => 
-                    filteredLineData.some(item => item.geo === country)
+                // Собираем данные по специализациям и странам
+                const lineData = {};
+                const specializations = new Set();
+                
+                filteredRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const geoCell = cells[0].textContent;
+                    const spec = cells[1].textContent.trim();
+                    const marketMedian = cells[5].textContent.trim();
+                    
+                    if (marketMedian === '--') return;
+                    
+                    specializations.add(spec);
+                    const countries = extractCountries(geoCell);
+                    
+                    countries.forEach(country => {
+                        if (!lineData[country]) {
+                            lineData[country] = {};
+                        }
+                        if (!lineData[country][spec]) {
+                            lineData[country][spec] = [];
+                        }
+                        lineData[country][spec].push(parseFloat(marketMedian));
+                    });
+                });
+
+                const uniqueSpecializations = Array.from(specializations);
+                const availableCountries = ['Беларусь', 'Россия', 'Польша'].filter(country => 
+                    lineData[country] && Object.keys(lineData[country]).length > 0
                 );
 
                 lineChart.data.labels = uniqueSpecializations;
-                lineChart.data.datasets = uniqueCountries.map(country => ({
+                lineChart.data.datasets = availableCountries.map(country => ({
                     label: country,
                     data: uniqueSpecializations.map(spec => {
-                        const item = filteredLineData.find(d => d.geo === country && d.specialization === spec);
-                        return item ? item.median : null;
+                        const values = lineData[country]?.[spec] || [];
+                        return values.length ? calculateMedian(values) : null;
                     }),
                     borderColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 1)' :
                                 country === 'Россия' ? 'rgba(13, 110, 253, 1)' :
@@ -579,125 +626,81 @@
                 lineChart.update();
             }
 
-            // Обновляем круговую диаграмму
+            // Обновляем круговую диаграмму стран
             if (pieChart) {
-                const filteredPieData = filterChartData(originalPieData, filters);
-                const total = filteredPieData.reduce((sum, item) => sum + item.count, 0);
-                
-                pieChart.data.labels = filteredPieData.map(item => item.geo);
-                pieChart.data.datasets[0].data = filteredPieData.map(item => (item.count / total * 100).toFixed(1));
+                const countryCount = {};
+                filteredRows.forEach(row => {
+                    const geoCell = row.querySelectorAll('td')[0].textContent;
+                    const countries = extractCountries(geoCell);
+                    
+                    countries.forEach(country => {
+                        countryCount[country] = (countryCount[country] || 0) + 1;
+                    });
+                });
+
+                const pieData = Object.entries(countryCount)
+                    .map(([country, count]) => ({
+                        geo: country,
+                        count: count
+                    }))
+                    .sort((a, b) => b.count - a.count);
+
+                pieChart.data.labels = pieData.map(item => item.geo);
+                pieChart.data.datasets[0].data = pieData.map(item => item.count);
                 pieChart.update();
             }
 
             // Обновляем круговую диаграмму грейдов
             if (gradeChart) {
-                const filteredGradeData = filterChartData(originalGradeData, filters);
-                const total = filteredGradeData.reduce((sum, item) => sum + item.count, 0);
-                
-                gradeChart.data.labels = filteredGradeData.map(item => item.grade);
-                gradeChart.data.datasets[0].data = filteredGradeData.map(item => (item.count / total * 100).toFixed(1));
+                const gradeCount = {};
+                filteredRows.forEach(row => {
+                    const grade = row.querySelectorAll('td')[2].textContent.trim();
+                    gradeCount[grade] = (gradeCount[grade] || 0) + 1;
+                });
+
+                const gradeData = Object.entries(gradeCount)
+                    .map(([grade, count]) => ({
+                        grade: grade,
+                        count: count
+                    }))
+                    .sort((a, b) => b.count - a.count);
+
+                gradeChart.data.labels = gradeData.map(item => item.grade);
+                gradeChart.data.datasets[0].data = gradeData.map(item => item.count);
                 gradeChart.update();
             }
         }
 
-        // Инициализация графиков
-        const originalBarData = [
-            { geo: 'Беларусь', median: 3500 },
-            { geo: 'Россия', median: 4200 },
-            { geo: 'Казахстан', median: 3800 },
-            { geo: 'Украина', median: 3200 },
-            { geo: 'Польша', median: 4500 },
-            { geo: 'Литва', median: 4000 },
-            { geo: 'Латвия', median: 3900 },
-            { geo: 'Эстония', median: 4100 }
-        ];
+        // Получаем данные из таблицы BYN
+        const tableBYN = document.getElementById('tableBYN');
+        const rows = Array.from(tableBYN.querySelectorAll('tbody tr'));
+        
+        // Функция для извлечения списка стран из строки
+        function extractCountries(geoString) {
+            return geoString.split(',').map(country => country.trim());
+        }
 
-        const originalLineData = [
-            { geo: 'Беларусь', specialization: 'Data Engineer', median: 3500 },
-            { geo: 'Беларусь', specialization: 'Data Scientist', median: 3200 },
-            { geo: 'Беларусь', specialization: 'Data Analyst', median: 2800 },
-            { geo: 'Беларусь', specialization: 'ML Engineer', median: 3800 },
-            { geo: 'Беларусь', specialization: 'Big Data Engineer', median: 4000 },
-            { geo: 'Беларусь', specialization: 'BI Analyst', median: 3000 },
-            { geo: 'Россия', specialization: 'Data Engineer', median: 4200 },
-            { geo: 'Россия', specialization: 'Data Scientist', median: 3800 },
-            { geo: 'Россия', specialization: 'Data Analyst', median: 3200 },
-            { geo: 'Россия', specialization: 'ML Engineer', median: 4500 },
-            { geo: 'Россия', specialization: 'Big Data Engineer', median: 4800 },
-            { geo: 'Россия', specialization: 'BI Analyst', median: 3500 },
-            { geo: 'Польша', specialization: 'Data Engineer', median: 4500 },
-            { geo: 'Польша', specialization: 'Data Scientist', median: 4200 },
-            { geo: 'Польша', specialization: 'Data Analyst', median: 3500 },
-            { geo: 'Польша', specialization: 'ML Engineer', median: 4800 },
-            { geo: 'Польша', specialization: 'Big Data Engineer', median: 5000 },
-            { geo: 'Польша', specialization: 'BI Analyst', median: 3800 }
-        ];
-
-        const originalPieData = [
-            { geo: 'Беларусь', count: 45 },
-            { geo: 'Россия', count: 25 },
-            { geo: 'Казахстан', count: 10 },
-            { geo: 'Украина', count: 5 },
-            { geo: 'Польша', count: 8 },
-            { geo: 'Литва', count: 3 },
-            { geo: 'Латвия', count: 2 },
-            { geo: 'Эстония', count: 2 }
-        ];
-
-        // Добавляем данные для распределения по грейдам
-        const originalGradeData = [
-            { grade: 'Junior', count: 15 },
-            { grade: 'Junior+', count: 10 },
-            { grade: 'Middle-', count: 12 },
-            { grade: 'Middle', count: 25 },
-            { grade: 'Middle+', count: 20 },
-            { grade: 'Senior-', count: 8 },
-            { grade: 'Senior', count: 15 },
-            { grade: 'Senior+', count: 10 },
-            { grade: 'Lead', count: 8 },
-            { grade: 'Lead+', count: 5 },
-            { grade: 'Head', count: 3 },
-            { grade: 'C-level', count: 2 },
-            { grade: 'Trainee', count: 7 }
-        ];
+        // Функция для расчета медианы
+        function calculateMedian(numbers) {
+            if (!numbers.length) return null;
+            const sorted = numbers.filter(n => n !== null && !isNaN(n)).sort((a, b) => a - b);
+            if (!sorted.length) return null;
+            const middle = Math.floor(sorted.length / 2);
+            if (sorted.length % 2 === 0) {
+                return (sorted[middle - 1] + sorted[middle]) / 2;
+            }
+            return sorted[middle];
+        }
 
         // Инициализация столбчатого графика
         const barCtx = document.getElementById('medianSalaryChart').getContext('2d');
-        
-        // Получаем данные из таблицы BYN
-        const tableBYN = document.getElementById('tableBYN');
-        const rows = tableBYN.querySelectorAll('tbody tr');
-        
-        // Собираем уникальные страны и их медианные зарплаты
-        const countryData = {};
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const country = cells[0].textContent.trim();
-            const median = parseFloat(cells[5].textContent.trim()) || 0;
-            
-            if (!countryData[country]) {
-                countryData[country] = {
-                    count: 0,
-                    total: 0
-                };
-            }
-            countryData[country].count++;
-            countryData[country].total += median;
-        });
-        
-        // Вычисляем средние медианные зарплаты по странам
-        const barData = Object.entries(countryData).map(([country, data]) => ({
-            geo: country,
-            median: Math.round(data.total / data.count)
-        })).sort((a, b) => b.median - a.median); // Сортируем по убыванию зарплаты
-        
         barChart = new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: barData.map(item => item.geo),
+                labels: [],
                 datasets: [{
                     label: 'Медианная зарплата (BYN)',
-                    data: barData.map(item => item.median),
+                    data: [],
                     backgroundColor: 'rgba(13, 110, 253, 0.5)',
                     borderColor: 'rgba(13, 110, 253, 1)',
                     borderWidth: 1
@@ -720,7 +723,7 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.parsed.y} BYN`;
+                                return `${Math.round(context.parsed.y)} BYN`;
                             }
                         }
                     }
@@ -731,24 +734,17 @@
                         title: {
                             display: true,
                             text: 'BYN'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return Math.round(value);
+                            }
                         }
                     },
                     x: {
                         title: {
                             display: true,
                             text: 'Страны'
-                        }
-                    }
-                },
-                plugins: {
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value) {
-                            return value + ' BYN';
-                        },
-                        font: {
-                            weight: 'bold'
                         }
                     }
                 }
@@ -760,21 +756,8 @@
         lineChart = new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels: [...new Set(originalLineData.map(item => item.specialization))],
-                datasets: ['Беларусь', 'Россия', 'Польша'].map(country => ({
-                    label: country,
-                    data: originalLineData
-                        .filter(item => item.geo === country)
-                        .map(item => item.median),
-                    borderColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 1)' :
-                                country === 'Россия' ? 'rgba(13, 110, 253, 1)' :
-                                'rgba(220, 53, 69, 1)',
-                    backgroundColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 0.1)' :
-                                    country === 'Россия' ? 'rgba(13, 110, 253, 0.1)' :
-                                    'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4
-                }))
+                labels: [],
+                datasets: []
             },
             options: {
                 responsive: true,
@@ -794,21 +777,8 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y} BYN`;
+                                return `${context.dataset.label}: ${Math.round(context.parsed.y)} BYN`;
                             }
-                        }
-                    },
-                    datalabels: {
-                        display: function(context) {
-                            return context.dataIndex === context.dataset.data.length - 1;
-                        },
-                        align: 'right',
-                        anchor: 'end',
-                        formatter: function(value, context) {
-                            return `${value} BYN`;
-                        },
-                        font: {
-                            size: 11
                         }
                     }
                 },
@@ -818,6 +788,11 @@
                         title: {
                             display: true,
                             text: 'BYN'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return Math.round(value);
+                            }
                         }
                     },
                     x: {
@@ -834,14 +809,14 @@
             }
         });
 
-        // Инициализация круговой диаграммы
+        // Инициализация круговой диаграммы стран
         const pieCtx = document.getElementById('vacanciesByCountryChart').getContext('2d');
         pieChart = new Chart(pieCtx, {
             type: 'pie',
             data: {
-                labels: originalPieData.map(item => item.geo),
+                labels: [],
                 datasets: [{
-                    data: originalPieData.map(item => item.count),
+                    data: [],
                     backgroundColor: [
                         'rgba(25, 135, 84, 0.8)',   // Беларусь
                         'rgba(13, 110, 253, 0.8)',  // Россия
@@ -889,18 +864,6 @@
                                 return `${context.label}: ${value} вакансий (${percentage}%)`;
                             }
                         }
-                    },
-                    datalabels: {
-                        color: '#fff',
-                        font: {
-                            weight: 'bold',
-                            size: 12
-                        },
-                        formatter: function(value, context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${value}\n(${percentage}%)`;
-                        }
                     }
                 }
             }
@@ -911,9 +874,9 @@
         gradeChart = new Chart(gradeCtx, {
             type: 'pie',
             data: {
-                labels: originalGradeData.map(item => item.grade),
+                labels: [],
                 datasets: [{
-                    data: originalGradeData.map(item => item.count),
+                    data: [],
                     backgroundColor: [
                         'rgba(25, 135, 84, 0.8)',   // Junior
                         'rgba(40, 167, 69, 0.8)',   // Junior+
@@ -975,6 +938,9 @@
                 }
             }
         });
+
+        // Вызываем обновление графиков при инициализации
+        updateCharts();
 
         // Функция для экспорта в HTML
         async function downloadChartsHTML() {
