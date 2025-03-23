@@ -48,10 +48,26 @@
         transition: all 0.3s ease;
         z-index: 1000;
     }
-    .exchange-rate-btn:hover {
-        transform: scale(1.1);
-        background-color: #0b5ed7;
+    .exchange-rate-btn::after {
+        content: 'Курсы валют';
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: #333;
         color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        margin-right: 5px;
+    }
+    .exchange-rate-btn:hover::after {
+        opacity: 1;
+        visibility: visible;
     }
     .exchange-rate-table {
         margin: 0;
@@ -90,7 +106,7 @@
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background-color: #198754;
+        background-color: #dc3545;  /* danger */
         color: white;
         display: flex;
         align-items: center;
@@ -102,17 +118,8 @@
         text-decoration: none;
         z-index: 2;
     }
-    .download-pdf-btn::before {
-        content: '';
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        right: -3px;
-        bottom: -3px;
-        background-color: #157347;
-        border-radius: 50%;
-        z-index: -1;
-        transition: all 0.3s ease;
+    .download-pdf-btn i {
+        transform: none;
     }
     .download-html-btn {
         position: absolute;
@@ -120,7 +127,7 @@
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background-color: #dc3545;
+        background-color: #0dcaf0;  /* info */
         color: white;
         display: flex;
         align-items: center;
@@ -135,13 +142,13 @@
         text-decoration: none;
         z-index: 1;
     }
+    .download-html-btn i {
+        transform: none;
+    }
     .download-buttons-container:hover .download-html-btn {
         transform: translateX(0);
         opacity: 1;
         visibility: visible;
-    }
-    .download-buttons-container:hover .download-pdf-btn::before {
-        opacity: 0;
     }
     .download-pdf-btn:hover,
     .download-html-btn:hover {
@@ -152,15 +159,57 @@
         display: block;
         transition: all 0.3s ease;
     }
-    .download-pdf-btn i.bi-file-excel {
+    .download-pdf-btn i.bi-file-pdf {
         display: none;
         transition: all 0.3s ease;
     }
     .download-buttons-container:hover .download-pdf-btn i.bi-download {
         display: none;
     }
-    .download-buttons-container:hover .download-pdf-btn i.bi-file-excel {
+    .download-buttons-container:hover .download-pdf-btn i.bi-file-pdf {
         display: block;
+    }
+    .download-pdf-btn::after {
+        content: 'Скачать PDF';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 5px;
+    }
+    .download-pdf-btn:hover::after {
+        opacity: 1;
+        visibility: visible;
+    }
+    .download-html-btn::after {
+        content: 'Скачать HTML';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 5px;
+    }
+    .download-html-btn:hover::after {
+        opacity: 1;
+        visibility: visible;
     }
 </style>
 {% endblock %}
@@ -907,8 +956,14 @@
                 // Переключаемся на вкладку с графиками
                 document.querySelector('#infographics-tab').click();
                 
-                // Ждем немного, чтобы графики отрендерились
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Принудительно обновляем все графики
+                if (barChart) barChart.update();
+                if (lineChart) lineChart.update();
+                if (pieChart) pieChart.update();
+                if (gradeChart) gradeChart.update();
+                
+                // Увеличиваем время ожидания для полного рендеринга
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 // Создаем новый документ
                 const html = document.createElement('html');
@@ -923,10 +978,25 @@
                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
                     <style>
                         body { padding: 20px; }
-                        .chart-container { margin-bottom: 30px; }
+                        .chart-container { 
+                            margin-bottom: 30px;
+                            text-align: center;
+                        }
+                        .chart-container img {
+                            max-width: 800px;
+                            width: 100%;
+                            height: auto;
+                            margin: 0 auto;
+                        }
                         .table-container { margin: 20px 0; }
                         .header { margin-bottom: 20px; text-align: center; }
                         .footer { margin-top: 20px; text-align: center; color: #666; }
+                        .chart-title {
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin: 10px 0;
+                            color: #333;
+                        }
                     </style>
                 `;
                 
@@ -940,19 +1010,36 @@
                 body.appendChild(header);
                 
                 // Получаем и конвертируем графики
-                const charts = document.querySelectorAll('#infographics .chart-container canvas');
+                const charts = [
+                    { id: 'medianSalaryChart', title: 'Медианные зарплаты по странам' },
+                    { id: 'medianSalaryLineChart', title: 'Медианные зарплаты по специализациям в разных странах' },
+                    { id: 'vacanciesByCountryChart', title: 'Распределение вакансий по странам' },
+                    { id: 'gradeDistributionChart', title: 'Распределение вакансий по грейдам' }
+                ];
+
                 const chartsContainer = document.createElement('div');
                 chartsContainer.className = 'charts-container';
                 
                 for (const chart of charts) {
-                    const container = document.createElement('div');
-                    container.className = 'chart-container';
-                    const img = document.createElement('img');
-                    img.src = chart.toDataURL('image/png');
-                    img.style.width = '100%';
-                    img.style.maxWidth = '800px';
-                    container.appendChild(img);
-                    chartsContainer.appendChild(container);
+                    const canvas = document.getElementById(chart.id);
+                    if (canvas) {
+                        const container = document.createElement('div');
+                        container.className = 'chart-container';
+                        
+                        // Добавляем заголовок графика
+                        const title = document.createElement('div');
+                        title.className = 'chart-title';
+                        title.textContent = chart.title;
+                        container.appendChild(title);
+
+                        // Добавляем изображение графика
+                        const img = document.createElement('img');
+                        img.src = canvas.toDataURL('image/png', 1.0);
+                        img.alt = chart.title;
+                        container.appendChild(img);
+                        
+                        chartsContainer.appendChild(container);
+                    }
                 }
                 
                 body.appendChild(chartsContainer);
@@ -970,6 +1057,8 @@
                 visibleRows.forEach(row => newTbody.appendChild(row.cloneNode(true)));
                 table.querySelector('tbody').replaceWith(newTbody);
                 
+                // Добавляем классы Bootstrap для стилизации таблицы
+                table.className = 'table table-striped table-bordered';
                 tableContainer.appendChild(table);
                 body.appendChild(tableContainer);
                 
@@ -991,7 +1080,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'vacancy_stats.html';
+                a.download = `vacancy_stats_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.html`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -1024,11 +1113,11 @@
 
 <!-- Кнопки для скачивания -->
 <div class="download-buttons-container">
-    <a href="#" id="downloadChartsPDF" class="download-pdf-btn" title="Скачать в PDF">
+    <a href="#" id="downloadChartsPDF" class="download-pdf-btn" title="Скачать PDF">
         <i class="bi bi-download"></i>
-        <i class="bi bi-file-excel"></i>
+        <i class="bi bi-file-pdf"></i>
     </a>
-    <a href="#" id="downloadChartsHTML" class="download-html-btn" title="Скачать в HTML">
+    <a href="#" id="downloadChartsHTML" class="download-html-btn" title="Скачать HTML">
         <i class="bi bi-code-slash"></i>
     </a>
 </div>
