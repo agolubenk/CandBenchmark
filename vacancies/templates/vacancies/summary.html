@@ -1141,6 +1141,58 @@
             e.preventDefault();
             exportTableToExcel('tableBYN', 'vacancy_stats_byn.xlsx');
         });
+
+        // Определяем порядок сортировки грейдов
+        const gradeOrder = {
+            'Trainee': 1,
+            'Junior': 2,
+            'Junior+': 3,
+            'Middle-': 4,
+            'Middle': 5,
+            'Middle+': 6,
+            'Senior-': 7,
+            'Senior': 8,
+            'Senior+': 9,
+            'Lead': 10,
+            'Lead+': 11,
+            'Head': 12,
+            'C-level': 13
+        };
+
+        // Функция для сортировки строк таблицы
+        function sortTableRows(tableId) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const cellsA = a.querySelectorAll('td');
+                const cellsB = b.querySelectorAll('td');
+
+                // Сначала сортируем по географии (алфавитно)
+                const geoCompare = cellsA[0].textContent.localeCompare(cellsB[0].textContent);
+                if (geoCompare !== 0) return geoCompare;
+
+                // Затем по специализации (алфавитно)
+                const specCompare = cellsA[1].textContent.localeCompare(cellsB[1].textContent);
+                if (specCompare !== 0) return specCompare;
+
+                // Затем по грейду (по порядку)
+                const gradeA = cellsA[2].textContent.trim();
+                const gradeB = cellsB[2].textContent.trim();
+                const gradeOrderA = gradeOrder[gradeA] || 999;
+                const gradeOrderB = gradeOrder[gradeB] || 999;
+                return gradeOrderA - gradeOrderB;
+            });
+
+            // Очищаем tbody и добавляем отсортированные строки
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Сортируем таблицы при загрузке страницы
+        sortTableRows('tableGross');
+        sortTableRows('tableBYN');
     });
 </script>
 {% endblock %}
@@ -1201,7 +1253,7 @@
 
 <!-- Весь ваш существующий HTML код из body, начиная с container -->
 <div class="container">
-    <h3 class="mb-2">Сводная статистика по вакансиям</h3>
+    <h3 class="mb-2">Сводная статистика по вакансиям за последние 3 месяца</h3>
 
     <form class="filter-form">
         <div class="row g-3 align-items-end">

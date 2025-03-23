@@ -185,8 +185,10 @@ def pivot_summary(request):
     grade_filter = request.GET.get('grade', '').strip()
     geo_filter = request.GET.get('geo', '').strip()
 
-    # Формируем начальный queryset
-    qs = Vacancy.objects.all()
+    # Формируем начальный queryset с фильтрацией по последним 92 дням
+    today = timezone.now().date()
+    ninety_two_days_ago = today - timedelta(days=91)  # 91 день назад + сегодня = 92 дня
+    qs = Vacancy.objects.filter(date_posted__gte=ninety_two_days_ago)
 
     # Применяем простую фильтрацию (по точному совпадению)
     if spec_filter:
