@@ -8,3 +8,4 @@ celerybeat*
 *.pyi
 *.pyc
 staticfiles/
+*.log

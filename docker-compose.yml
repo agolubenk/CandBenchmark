@@ -34,10 +34,10 @@ services:
   web:
     <<: *default-python
     command: >
-      sh -c "cron && python3 manage.py migrate &&
-             python3 manage.py collectstatic --noinput &&
+      sh -c "crond && python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              python manage.py crontab add
-             python3 manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8001:8000"
     depends_on:
