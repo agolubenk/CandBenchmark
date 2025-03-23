@@ -1121,6 +1121,26 @@
                 downloadChartsHTML();
             });
         }
+
+        // Функция для экспорта таблицы в Excel
+        function exportTableToExcel(tableId, fileName) {
+            const table = document.getElementById(tableId);
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(table);
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // Обработчики для кнопок экспорта
+        document.getElementById('exportGross').addEventListener('click', function(e) {
+            e.preventDefault();
+            exportTableToExcel('tableGross', 'vacancy_stats_gross.xlsx');
+        });
+
+        document.getElementById('exportBYN').addEventListener('click', function(e) {
+            e.preventDefault();
+            exportTableToExcel('tableBYN', 'vacancy_stats_byn.xlsx');
+        });
     });
 </script>
 {% endblock %}

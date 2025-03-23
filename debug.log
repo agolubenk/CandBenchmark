@@ -1,0 +1,2 @@
+INFO 2025-03-23 16:45:32,812 autoreload 1622 281473529388320 Watching for file changes with StatReloader
+INFO 2025-03-23 16:45:47,244 autoreload 1622 281473529388320 /app/vacancies/views.py changed, reloading.
