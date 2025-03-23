@@ -51,31 +51,98 @@
             </div>
           </div>
 
+          <!-- Секция с фильтрами -->
+          <div class="filters-section mb-3">
+            <div class="accordion" id="filtersAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
+                            <i class="bi bi-funnel me-2"></i>Фильтры
+                        </button>
+                    </h2>
+                    <div id="filtersCollapse" class="accordion-collapse collapse" aria-labelledby="filtersAccordion" data-bs-parent="#filtersAccordion">
+                        <div class="accordion-body">
+                            <div class="filter-buttons">
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Локация:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Беларусь">Беларусь</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Россия">Россия</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Польша">Польша</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Украина">Украина</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Казахстан">Казахстан</button>
+                                    </div>
+                                </div>
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Грейд:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Junior">Junior</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Middle">Middle</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Senior">Senior</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Lead">Lead</button>
+                                    </div>
+                                </div>
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Валюта:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="BYN">BYN</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="USD">USD</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="EUR">EUR</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="RUB">RUB</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+
           <!-- Секция с промптом -->
           <div class="prompt-section mb-3">
             <h6>Выберите тип анализа:</h6>
-            <select class="form-select mb-2" id="promptSelect">
-              <option value="salary">Анализ зарплат и тенденций</option>
-              <option value="skills">Анализ требуемых навыков</option>
-              <option value="companies">Анализ компаний и их предложений</option>
-              <option value="locations">Анализ географического распределения</option>
-              <option value="custom">Пользовательский запрос</option>
-            </select>
-            <div class="custom-prompt-container d-none">
-              <textarea class="form-control" 
-                        id="customPrompt" 
-                        rows="3" 
-                        placeholder="Введите ваш запрос для анализа..."></textarea>
+            <div class="d-flex gap-2 align-items-start">
+                <select class="form-select" id="promptSelect">
+                    <option value="salary">Анализ зарплат и тенденций</option>
+                    <option value="skills">Анализ требуемых навыков</option>
+                    <option value="companies">Анализ компаний и их предложений</option>
+                    <option value="locations">Анализ географического распределения</option>
+                    <option value="custom">Пользовательский запрос</option>
+                </select>
+                <button type="button" class="btn btn-primary" id="startAnalysis">
+                    <i class="bi bi-play-fill"></i> Анализ
+                </button>
+            </div>
+            <div class="custom-prompt-container d-none mt-2">
+                <textarea class="form-control" 
+                          id="customPrompt" 
+                          rows="3" 
+                          placeholder="Введите ваш запрос для анализа..."></textarea>
             </div>
           </div>
 
           <!-- Чат с результатами -->
-          <div class="chat-container mb-3">
+          <div class="chat-container mb-3 d-none" id="chatContainer">
             <div class="chat-messages" id="chatMessages">
-              <!-- Сообщения будут добавляться динамически -->
-              <div class="message system-message">
-                Выберите тип анализа и нажмите "Начать анализ" для получения результатов.
-              </div>
+                <!-- Сообщения будут добавляться динамически -->
+            </div>
+            <!-- Форма ввода сообщения -->
+            <div class="chat-input-container">
+                <form id="chatForm" class="d-flex gap-2">
+                    <input type="text" 
+                           class="form-control" 
+                           id="messageInput" 
+                           placeholder="Введите сообщение..."
+                           autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Отправить
+                        </button>
+                        <button type="button" class="btn btn-success download-btn" id="downloadAnalysis" disabled>
+                            <i class="bi bi-file-pdf"></i>
+                        </button>
+                    </div>
+                </form>
             </div>
           </div>
         </div>
@@ -336,61 +403,189 @@
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
     font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
+  .filter-tag .remove-filter {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.2s ease;
+  }
+
+  .filter-tag .remove-filter:hover {
+    color: #dc3545;
+  }
+
+  /* Обновленные стили для чата */
   .chat-container {
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     height: 300px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
   }
 
   .chat-messages {
     padding: 1rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .message {
-    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    max-width: 85%;
     padding: 0.75rem;
-    border-radius: 0.375rem;
-    max-width: 80%;
+    border-radius: 0.5rem;
+    position: relative;
   }
 
-  .system-message {
-    background-color: #f8f9fa;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
+  .message-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
-  .user-message {
-    background-color: #e9ecef;
-    margin-left: auto;
-  }
-
-  .ai-message {
-    background-color: #f0f9ff;
-    margin-right: auto;
+  .message-content {
+    flex-grow: 1;
+    white-space: pre-line;
   }
 
   .message-time {
     font-size: 0.75rem;
     color: #6c757d;
     margin-top: 0.25rem;
+    text-align: right;
   }
 
-  /* Анимация загрузки */
-  .loading-dots::after {
-    content: '';
-    animation: loading 1.5s infinite;
+  .user-message {
+    background-color: #e3f2fd;
+    margin-left: auto;
+    border-bottom-right-radius: 0.25rem;
   }
 
-  @keyframes loading {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
-    100% { content: ''; }
+  .user-message .message-icon {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  .system-message {
+    background-color: #fff3e0;
+    margin-right: auto;
+    border-bottom-left-radius: 0.25rem;
+  }
+
+  .system-message .message-icon {
+    background-color: #ff9800;
+    color: white;
+  }
+
+  .ai-message {
+    background-color: #f5f5f5;
+    margin-right: auto;
+    border-bottom-left-radius: 0.25rem;
+  }
+
+  .ai-message .message-icon {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .chat-input-container {
+    padding: 0.75rem;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+
+  .chat-input-container form {
+    margin: 0;
+  }
+
+  .chat-input-container .btn {
+    padding: 0.375rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chat-input-container .btn i {
+    font-size: 1rem;
+  }
+
+  #messageInput {
+    border-radius: 1.5rem;
+    padding: 0.375rem 1rem;
+  }
+
+  /* Убираем отступы у модального футера */
+  .modal-footer {
+    display: none;
+  }
+
+  /* Обновленные стили для секции промпта */
+  .prompt-section select {
+    flex-grow: 1;
+  }
+
+  .prompt-section .btn {
+    white-space: nowrap;
+  }
+
+  /* Стили для анимации появления чата */
+  .chat-container {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+  }
+
+  .chat-container.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Стили для кнопки скачивания */
+  .download-btn {
+    padding: 0.375rem 0.75rem;
+    position: relative;
+  }
+
+  .download-btn::after {
+    content: 'Выгрузить чат';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    margin-bottom: 5px;
+  }
+
+  .download-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
   }
 </style>
 
@@ -410,22 +605,116 @@ document.addEventListener('DOMContentLoaded', function() {
         customPromptContainer.classList.toggle('d-none', this.value !== 'custom');
     });
 
-    // Обновление тегов фильтров при открытии модального окна
-    document.getElementById('aiAnalysisModal').addEventListener('show.bs.modal', function() {
-        updateFilterTags();
+    // Обработка фильтров
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const activeFilters = {
+        geo: [],
+        grade: [],
+        currency: []
+    };
+
+    // Функция для активации/деактивации кнопок фильтров
+    function toggleFilterButton(button, isActive) {
+        button.classList.toggle('active', isActive);
+        button.style.display = isActive ? 'none' : 'inline-block';
+    }
+
+    // Функция для обновления URL с фильтрами
+    function updateUrlWithFilters() {
+        const params = new URLSearchParams();
+        Object.entries(activeFilters).forEach(([type, values]) => {
+            if (values.length > 0) {
+                params.append(type, values.join(','));
+            }
+        });
+        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.pushState({}, '', newUrl);
+    }
+
+    // Обработка кликов по кнопкам фильтров
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filterType = this.dataset.filter;
+            const filterValue = this.dataset.value;
+            
+            // Активируем кнопку и скрываем её
+            toggleFilterButton(this, true);
+            
+            // Добавляем фильтр в активные
+            if (!activeFilters[filterType].includes(filterValue)) {
+                activeFilters[filterType].push(filterValue);
+            }
+            
+            // Обновляем теги фильтров
+            updateFilterTags();
+            // Обновляем URL
+            updateUrlWithFilters();
+        });
     });
 
-    // Функция обновления тегов фильтров
+    // Обновленная функция обновления тегов фильтров
     function updateFilterTags() {
         const searchQuery = document.querySelector('input[name="search"]').value;
         filterTags.innerHTML = '';
         
+        // Добавляем тег поиска, если есть
         if (searchQuery) {
-            const tag = document.createElement('span');
-            tag.className = 'filter-tag';
-            tag.textContent = `Поиск: ${searchQuery}`;
-            filterTags.appendChild(tag);
-        } else {
+            const searchTag = document.createElement('span');
+            searchTag.className = 'filter-tag';
+            searchTag.innerHTML = `
+                Поиск: ${searchQuery}
+                <button class="remove-filter" data-filter="search">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            searchTag.querySelector('.remove-filter').addEventListener('click', function() {
+                document.querySelector('input[name="search"]').value = '';
+                updateFilterTags();
+            });
+            filterTags.appendChild(searchTag);
+        }
+        
+        // Добавляем теги для каждого типа фильтра
+        Object.entries(activeFilters).forEach(([type, values]) => {
+            if (values.length > 0) {
+                const filterLabel = {
+                    geo: 'Локация',
+                    grade: 'Грейд',
+                    currency: 'Валюта'
+                }[type];
+                
+                const tag = document.createElement('span');
+                tag.className = 'filter-tag';
+                tag.innerHTML = `
+                    ${filterLabel}: ${values.join(', ')}
+                    <button class="remove-filter" data-filter="${type}">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                
+                // Добавляем обработчик для кнопки удаления
+                tag.querySelector('.remove-filter').addEventListener('click', function() {
+                    // Находим и активируем все кнопки с соответствующими значениями
+                    const buttons = document.querySelectorAll(`.filter-btn[data-filter="${type}"]`);
+                    buttons.forEach(button => {
+                        toggleFilterButton(button, false);
+                    });
+                    
+                    // Очищаем массив активных фильтров для данного типа
+                    activeFilters[type] = [];
+                    
+                    // Обновляем отображение тегов
+                    updateFilterTags();
+                    // Обновляем URL
+                    updateUrlWithFilters();
+                });
+                
+                filterTags.appendChild(tag);
+            }
+        });
+        
+        // Если нет активных фильтров, показываем "Все вакансии"
+        if (filterTags.children.length === 0) {
             const tag = document.createElement('span');
             tag.className = 'filter-tag';
             tag.textContent = 'Все вакансии';
@@ -433,27 +722,95 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Функция добавления сообщения в чат
+    // Инициализация фильтров из URL при загрузке страницы
+    function initializeFiltersFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        Object.keys(activeFilters).forEach(type => {
+            const values = params.get(type);
+            if (values) {
+                activeFilters[type] = values.split(',');
+                // Скрываем соответствующие кнопки
+                values.split(',').forEach(value => {
+                    const button = document.querySelector(`.filter-btn[data-filter="${type}"][data-value="${value}"]`);
+                    if (button) {
+                        toggleFilterButton(button, true);
+                    }
+                });
+            }
+        });
+        updateFilterTags();
+    }
+
+    // Инициализация фильтров при открытии модального окна
+    document.getElementById('aiAnalysisModal').addEventListener('show.bs.modal', function() {
+        initializeFiltersFromUrl();
+    });
+
+    // Инициализация фильтров при загрузке страницы
+    initializeFiltersFromUrl();
+
+    // Обработка формы чата
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        
+        if (message) {
+            // Добавляем сообщение пользователя
+            addMessage(message, 'user');
+            
+            // Очищаем поле ввода
+            messageInput.value = '';
+            
+            // Активируем кнопку скачивания
+            downloadAnalysisBtn.disabled = false;
+        }
+    });
+    
+    // Обновляем функцию addMessage для поддержки HTML-контента
     function addMessage(text, type = 'system') {
         const message = document.createElement('div');
         message.className = `message ${type}-message`;
         
+        const icon = document.createElement('div');
+        icon.className = 'message-icon';
+        
+        // Добавляем иконку в зависимости от типа сообщения
+        switch(type) {
+            case 'user':
+                icon.innerHTML = '<i class="bi bi-person-fill"></i>';
+                break;
+            case 'ai':
+                icon.innerHTML = '<i class="bi bi-robot"></i>';
+                break;
+            default:
+                icon.innerHTML = '<i class="bi bi-gear-fill"></i>';
+        }
+        
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'message-content-wrapper';
+        
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.textContent = text;
+        content.innerHTML = text;
         
         const time = document.createElement('div');
         time.className = 'message-time';
         time.textContent = new Date().toLocaleTimeString();
         
-        message.appendChild(content);
-        message.appendChild(time);
+        contentWrapper.appendChild(content);
+        contentWrapper.appendChild(time);
+        message.appendChild(icon);
+        message.appendChild(contentWrapper);
+        
         chatMessages.appendChild(message);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // Имитация анализа
-    startAnalysisBtn.addEventListener('click', async function() {
+    // Обработка кнопки анализа
+    startAnalysisBtn.addEventListener('click', function() {
         const promptType = promptSelect.value;
         const customPrompt = document.getElementById('customPrompt')?.value;
         
@@ -463,25 +820,30 @@ document.addEventListener('DOMContentLoaded', function() {
             `Анализ вакансий: ${promptSelect.options[promptSelect.selectedIndex].text}`;
         addMessage(userPrompt, 'user');
         
+        // Показываем чат с анимацией
+        const chatContainer = document.getElementById('chatContainer');
+        chatContainer.classList.remove('d-none');
+        setTimeout(() => chatContainer.classList.add('show'), 10);
+        
         // Добавляем сообщение о загрузке
         addMessage('Анализирую данные...', 'system');
         startAnalysisBtn.disabled = true;
         
         // Имитация задержки анализа
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Удаляем сообщение о загрузке
-        chatMessages.removeChild(chatMessages.lastChild);
-        
-        // Добавляем ответ AI
-        const aiResponse = getAIResponse(promptType);
-        addMessage(aiResponse, 'ai');
-        
-        // Активируем кнопку скачивания
-        downloadAnalysisBtn.disabled = false;
-        startAnalysisBtn.disabled = false;
+        setTimeout(() => {
+            // Удаляем сообщение о загрузке
+            chatMessages.removeChild(chatMessages.lastChild);
+            
+            // Добавляем ответ AI
+            const aiResponse = getAIResponse(promptType);
+            addMessage(aiResponse, 'ai');
+            
+            // Активируем кнопку скачивания
+            downloadAnalysisBtn.disabled = false;
+            startAnalysisBtn.disabled = false;
+        }, 2000);
     });
-
+    
     // Функция получения фиктивного ответа AI
     function getAIResponse(promptType) {
         const responses = {
@@ -494,148 +856,186 @@ document.addEventListener('DOMContentLoaded', function() {
         return responses[promptType] || 'Анализ выполнен успешно.';
     }
 
-    // Новая функция скачивания HTML
+    // Обработка кнопки скачивания
     downloadAnalysisBtn.addEventListener('click', function() {
-        try {
-            console.log('Starting HTML generation...');
-            
-            // Получаем текущую дату и время
-            const now = new Date();
-            const dateStr = now.toLocaleString('ru-RU');
-            
-            // Получаем текущие фильтры
-            const filterTag = document.querySelector('.filter-tag');
-            const filterText = filterTag ? filterTag.textContent : 'Все вакансии';
-            
-            // Создаем HTML контент
-            let htmlContent = `
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Анализ вакансий - ${dateStr}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-        .header {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .filters {
-            background-color: #e9ecef;
-            padding: 10px 15px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .chat {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .message {
-            margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 80%;
-        }
-        .system-message {
-            background-color: #f8f9fa;
-            margin: 20px auto;
-            text-align: center;
-        }
-        .user-message {
-            background-color: #e9ecef;
-            margin-left: auto;
-        }
-        .ai-message {
-            background-color: #f0f9ff;
-            margin-right: auto;
-        }
-        .message-time {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #6c757d;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Анализ вакансий</h1>
-        <p>Дата создания: ${dateStr}</p>
-        <div class="filters">
-            ${filterText}
-        </div>
-    </div>
-    <div class="chat">`;
+        // Получаем текущую дату и время
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+        const timeStr = now.toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
 
-            // Добавляем сообщения
-            const messages = Array.from(chatMessages.children);
-            messages.forEach(msg => {
-                const content = msg.querySelector('.message-content')?.textContent || '';
-                const time = msg.querySelector('.message-time')?.textContent || '';
-                let type = 'system';
+        // Получаем активные фильтры
+        const activeFiltersList = Array.from(filterTags.children)
+            .filter(tag => !tag.textContent.includes('Все вакансии'))
+            .map(tag => tag.textContent.trim())
+            .join('\n');
+
+        // Получаем количество отфильтрованных вакансий
+        const filteredVacanciesCount = document.querySelectorAll('.table-scroll tbody tr').length;
+
+        // Создаем HTML-документ
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Анализ вакансий</title>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        margin: 20px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background-color: #f8f9fa;
+                    }
+                    .chat-messages {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+                    .message {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 0.75rem;
+                        max-width: 85%;
+                        padding: 0.75rem;
+                        border-radius: 0.5rem;
+                        position: relative;
+                    }
+                    .message-icon {
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                    }
+                    .message-content {
+                        flex-grow: 1;
+                        white-space: pre-line;
+                    }
+                    .message-time {
+                        font-size: 0.75rem;
+                        color: #6c757d;
+                        margin-top: 0.25rem;
+                        text-align: right;
+                    }
+                    .user-message {
+                        background-color: #e3f2fd;
+                        margin-left: auto;
+                        border-bottom-right-radius: 0.25rem;
+                    }
+                    .user-message .message-icon {
+                        background-color: #2196f3;
+                        color: white;
+                    }
+                    .system-message {
+                        background-color: #fff3e0;
+                        margin-right: auto;
+                        border-bottom-left-radius: 0.25rem;
+                    }
+                    .system-message .message-icon {
+                        background-color: #ff9800;
+                        color: white;
+                    }
+                    .ai-message {
+                        background-color: #f5f5f5;
+                        margin-right: auto;
+                        border-bottom-left-radius: 0.25rem;
+                    }
+                    .ai-message .message-icon {
+                        background-color: #4caf50;
+                        color: white;
+                    }
+                    .message-content-wrapper {
+                        flex-grow: 1;
+                    }
+                    h1 {
+                        color: #333;
+                        margin-bottom: 1rem;
+                        text-align: center;
+                    }
+                    .bi {
+                        font-size: 1.2rem;
+                    }
+                    .report-info {
+                        background-color: #fff;
+                        border: 1px solid #dee2e6;
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        margin-bottom: 2rem;
+                    }
+                    .report-info p {
+                        margin: 0.5rem 0;
+                    }
+                    .report-info strong {
+                        color: #495057;
+                    }
+                    .footer {
+                        text-align: center;
+                        margin-top: 2rem;
+                        padding-top: 1rem;
+                        border-top: 1px solid #dee2e6;
+                        font-size: 0.875rem;
+                        color: #6c757d;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Анализ вакансий</h1>
                 
-                if (msg.classList.contains('user-message')) type = 'user';
-                else if (msg.classList.contains('ai-message')) type = 'ai';
-                
-                htmlContent += `
-        <div class="message ${type}-message">
-            <pre>${content}</pre>
-            <div class="message-time">${time}</div>
-        </div>`;
-            });
+                <div class="report-info">
+                    <p><strong>Дата:</strong> ${dateStr}</p>
+                    <p><strong>Время:</strong> ${timeStr}</p>
+                    <p><strong>Автор:</strong> Market Benchmark from @agolubenk</p>
+                    <p><strong>Количество проанализированных вакансий:</strong> ${filteredVacanciesCount}</p>
+                    ${activeFiltersList ? `<p><strong>Примененные фильтры:</strong></p><pre style="margin: 0.5rem 0; white-space: pre-wrap;">${activeFiltersList}</pre>` : ''}
+                </div>
 
-            // Добавляем подвал
-            htmlContent += `
-    </div>
-    <div class="footer">
-        <p>Сгенерировано системой AI Analysis</p>
-    </div>
-</body>
-</html>`;
+                <div class="chat-messages">
+                    ${Array.from(chatMessages.children).map(message => `
+                        <div class="message ${message.classList.contains('user-message') ? 'user-message' : 
+                            message.classList.contains('ai-message') ? 'ai-message' : 'system-message'}">
+                            <div class="message-icon">
+                                ${message.querySelector('.message-icon').innerHTML}
+                            </div>
+                            <div class="message-content-wrapper">
+                                <div class="message-content">${message.querySelector('.message-content').innerHTML}</div>
+                                <div class="message-time">${message.querySelector('.message-time').textContent}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
 
-            // Создаем и скачиваем файл
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const fileName = `ai-analysis-${now.toISOString().split('T')[0]}.html`;
-            
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            console.log('HTML saved successfully');
-            
-        } catch (error) {
-            console.error('Error generating HTML:', error);
-            alert('Произошла ошибка при создании отчета. Пожалуйста, попробуйте еще раз.');
-        }
+                <div class="footer">
+                    <p>Сгенерировано Market Benchmark</p>
+                    <p>${dateStr} ${timeStr}</p>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Создаем Blob и ссылку для скачивания
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'анализ_вакансий.html';
+        
+        // Добавляем ссылку в документ, эмулируем клик и удаляем ссылку
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     });
 });
 </script>
