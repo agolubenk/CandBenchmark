@@ -18,10 +18,14 @@ CURRENCY_SYNONYMS = {
     'eur': 'EUR',
     'зарк': 'ZAR',    # Если у вас встречаются какие-то опечатки
     'zar': 'ZAR',
+    'uzs': 'UZS',
+    'сум': 'UZS',
+    'sum': 'UZS',
+    'сўм': 'UZS',
     # ... при необходимости добавляйте другие варианты ...
 }
 
-VALID_CURRENCIES = {'USD', 'RUB', 'BYN', 'EUR', 'ZAR'}
+VALID_CURRENCIES = {'USD', 'RUB', 'BYN', 'EUR', 'ZAR', 'UZS'}
 
 def unify_currency(input_str):
     """

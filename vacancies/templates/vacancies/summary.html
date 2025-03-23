@@ -663,13 +663,41 @@
 
         // Инициализация столбчатого графика
         const barCtx = document.getElementById('medianSalaryChart').getContext('2d');
+        
+        // Получаем данные из таблицы BYN
+        const tableBYN = document.getElementById('tableBYN');
+        const rows = tableBYN.querySelectorAll('tbody tr');
+        
+        // Собираем уникальные страны и их медианные зарплаты
+        const countryData = {};
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const country = cells[0].textContent.trim();
+            const median = parseFloat(cells[5].textContent.trim()) || 0;
+            
+            if (!countryData[country]) {
+                countryData[country] = {
+                    count: 0,
+                    total: 0
+                };
+            }
+            countryData[country].count++;
+            countryData[country].total += median;
+        });
+        
+        // Вычисляем средние медианные зарплаты по странам
+        const barData = Object.entries(countryData).map(([country, data]) => ({
+            geo: country,
+            median: Math.round(data.total / data.count)
+        })).sort((a, b) => b.median - a.median); // Сортируем по убыванию зарплаты
+        
         barChart = new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: originalBarData.map(item => item.geo),
+                labels: barData.map(item => item.geo),
                 datasets: [{
                     label: 'Медианная зарплата (BYN)',
-                    data: originalBarData.map(item => item.median),
+                    data: barData.map(item => item.median),
                     backgroundColor: 'rgba(13, 110, 253, 0.5)',
                     borderColor: 'rgba(13, 110, 253, 1)',
                     borderWidth: 1
@@ -681,7 +709,7 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Медианные зарплаты по странам (столбчатый график)',
+                        text: 'Медианные зарплаты по странам (BYN)',
                         font: {
                             size: 16
                         }

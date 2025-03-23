@@ -44,7 +44,9 @@ class Command(BaseCommand):
                     self.style.ERROR(f'Ошибка API: {response.status_code}')
                 )
         except Exception as e:
-            logger.error(f"Ошибка при обновлении курсов валют: {e}")
+            logger.error(f"Ошибка при получении курсов валют из БД: {e}")
+            # В случае ошибки используем резервные значения
+            rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033, 'UZS': 0.00020}
             self.stdout.write(
                 self.style.ERROR(f'Ошибка при обновлении курсов: {str(e)}')
             ) 
