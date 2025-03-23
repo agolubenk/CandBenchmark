@@ -108,6 +108,11 @@
                     {% endif %}
                     {% endif %}
 
+                    {% if vacancy.work_format %}
+                    <dt class="col-sm-5">Формат работы:</dt>
+                    <dd class="col-sm-7">{{ vacancy.work_format }}</dd>
+                    {% endif %}
+                    
                     <dt class="col-sm-5">Источник:</dt>
                     <dd class="col-sm-7">{{ vacancy.source }}</dd>
 
@@ -118,6 +123,7 @@
 
                     <dt class="col-sm-5">Дата публикации:</dt>
                     <dd class="col-sm-7">{{ vacancy.date_posted|date:"d.m.Y" }}</dd>
+
                 </dl>
 
                 {% if edit_history.editor or edit_history.edited_at %}

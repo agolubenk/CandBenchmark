@@ -77,7 +77,7 @@
     }
     .chart-container {
         position: relative;
-        height: 400px;
+        height: 600px;
         width: 100%;
         margin: 20px 0;
     }
@@ -603,26 +603,50 @@
                 });
 
                 const uniqueSpecializations = Array.from(specializations);
-                const availableCountries = ['Беларусь', 'Россия', 'Польша'].filter(country => 
-                    lineData[country] && Object.keys(lineData[country]).length > 0
-                );
+                // Получаем все уникальные страны из данных
+                const availableCountries = Array.from(new Set(
+                    filteredRows.flatMap(row => 
+                        extractCountries(row.querySelectorAll('td')[0].textContent)
+                    )
+                )).sort();
+
+                // Цвета для стран (расширенная палитра)
+                const countryColors = {
+                    'Беларусь': { border: 'rgba(25, 135, 84, 1)', background: 'rgba(25, 135, 84, 0.1)' },
+                    'Россия': { border: 'rgba(13, 110, 253, 1)', background: 'rgba(13, 110, 253, 0.1)' },
+                    'Польша': { border: 'rgba(220, 53, 69, 1)', background: 'rgba(220, 53, 69, 0.1)' },
+                    'Казахстан': { border: 'rgba(255, 193, 7, 1)', background: 'rgba(255, 193, 7, 0.1)' },
+                    'Украина': { border: 'rgba(111, 66, 193, 1)', background: 'rgba(111, 66, 193, 0.1)' },
+                    'Литва': { border: 'rgba(23, 162, 184, 1)', background: 'rgba(23, 162, 184, 0.1)' },
+                    'Латвия': { border: 'rgba(255, 127, 80, 1)', background: 'rgba(255, 127, 80, 0.1)' },
+                    'Эстония': { border: 'rgba(108, 117, 125, 1)', background: 'rgba(108, 117, 125, 0.1)' },
+                    'Узбекистан': { border: 'rgba(40, 167, 69, 1)', background: 'rgba(40, 167, 69, 0.1)' },
+                    'Грузия': { border: 'rgba(102, 16, 242, 1)', background: 'rgba(102, 16, 242, 0.1)' }
+                };
+
+                // Функция для получения цвета для страны
+                function getCountryColors(country) {
+                    return countryColors[country] || {
+                        border: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
+                        background: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.1)`
+                    };
+                }
 
                 lineChart.data.labels = uniqueSpecializations;
-                lineChart.data.datasets = availableCountries.map(country => ({
-                    label: country,
-                    data: uniqueSpecializations.map(spec => {
-                        const values = lineData[country]?.[spec] || [];
-                        return values.length ? calculateMedian(values) : null;
-                    }),
-                    borderColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 1)' :
-                                country === 'Россия' ? 'rgba(13, 110, 253, 1)' :
-                                'rgba(220, 53, 69, 1)',
-                    backgroundColor: country === 'Беларусь' ? 'rgba(25, 135, 84, 0.1)' :
-                                    country === 'Россия' ? 'rgba(13, 110, 253, 0.1)' :
-                                    'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4
-                }));
+                lineChart.data.datasets = availableCountries.map(country => {
+                    const colors = getCountryColors(country);
+                    return {
+                        label: country,
+                        data: uniqueSpecializations.map(spec => {
+                            const values = lineData[country]?.[spec] || [];
+                            return values.length ? calculateMedian(values) : null;
+                        }),
+                        borderColor: colors.border,
+                        backgroundColor: colors.background,
+                        borderWidth: 2,
+                        tension: 0.4
+                    };
+                });
                 lineChart.update();
             }
 
