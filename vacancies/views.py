@@ -187,7 +187,7 @@ def pivot_summary(request):
 
     # Формируем начальный queryset с фильтрацией по последним 92 дням
     today = timezone.now().date()
-    ninety_two_days_ago = today - timedelta(days=91)  # 91 день назад + сегодня = 92 дня
+    ninety_two_days_ago = today - timedelta(days=91)  # 91 день назад включительно
     qs = Vacancy.objects.filter(date_posted__gte=ninety_two_days_ago)
 
     # Применяем простую фильтрацию (по точному совпадению)
@@ -587,3 +587,47 @@ def edit_vacancy(request, vacancy_id):
             'edited_at': vacancy.last_edited_at
         }
     })
+
+#обновляем курсы валют 
+def handle():
+    print('обновляем курсы валют')
+    try:
+        response = requests.get('https://www.nbrb.by/api/exrates/rates?periodicity=0', verify=False)
+        if response.status_code == 200:
+            data = response.json()
+            updated_count = 0
+            
+            for rate_data in data:
+                currency = rate_data['Cur_Abbreviation']
+                rate = rate_data['Cur_OfficialRate'] / rate_data['Cur_Scale']
+                
+                exchange_rate, created = ExchangeRate.objects.update_or_create(
+                    currency=currency,
+                    defaults={'rate': rate}
+                )
+                updated_count += 1
+                print(
+                    f'Обновлен курс {currency}: {rate} BYN'
+                )
+            
+            # Добавляем BYN как базовую валюту с курсом 1.0
+            ExchangeRate.objects.update_or_create(
+                currency='BYN',
+                defaults={'rate': 1.0}
+            )
+            updated_count += 1
+            
+            print(
+                f'Всего успешно обновлено {updated_count} курсов валют'
+            )
+        else:
+            print(
+                f'Ошибка API: {response.status_code}'
+            )
+    except Exception as e:
+        print(f"Ошибка при получении курсов валют из БД: {e}")
+        # В случае ошибки используем резервные значения
+        rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033, 'UZS': 0.00020}
+        print(
+            f'Ошибка при обновлении курсов: {str(e)}'
+        ) 

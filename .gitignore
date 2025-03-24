@@ -9,3 +9,4 @@ celerybeat*
 *.pyc
 staticfiles/
 *.log
+log/

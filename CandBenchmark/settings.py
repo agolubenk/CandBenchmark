@@ -145,5 +145,5 @@ GEMINI_API_URL = os.getenv('GEMINI_API_URL')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 CRONJOBS = [
-    ('*/10 * * * *', 'vacancies.views.get_exchange_rates')
+    ('*/30 * * * *', 'vacancies.views.handle', '>> ' + os.path.join(BASE_DIR,'log/debug.log' + ' 2>&1 '))
 ]
