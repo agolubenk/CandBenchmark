@@ -41,6 +41,7 @@ def index(request):
     search_query = request.GET.get('search', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
+    per_page = request.GET.get('per_page', '50')  # По умолчанию 50 записей
     
     if search_query:
         vacancies = Vacancy.objects.filter(
@@ -61,20 +62,31 @@ def index(request):
         vacancies = vacancies.filter(date_posted__lte=dt)
     
     # Настраиваем пагинацию
-    paginator = Paginator(vacancies, 50)  # 50 вакансий на страницу
-    page = request.GET.get('page')
-    
-    try:
-        vacancies = paginator.get_page(page)
-    except PageNotAnInteger:
-        # Если страница не является целым числом, возвращаем первую страницу
-        vacancies = paginator.get_page(1)
-    except EmptyPage:
-        # Если страница больше максимальной, возвращаем последнюю страницу
-        vacancies = paginator.get_page(paginator.num_pages)
+    if per_page == 'all':
+        # Если выбрано "все", не используем пагинацию
+        paginated_vacancies = vacancies
+    else:
+        try:
+            # Преобразуем per_page в число
+            items_per_page = int(per_page)
+            paginator = Paginator(vacancies, items_per_page)
+            page = request.GET.get('page')
+            
+            try:
+                paginated_vacancies = paginator.get_page(page)
+            except PageNotAnInteger:
+                # Если страница не является целым числом, возвращаем первую страницу
+                paginated_vacancies = paginator.get_page(1)
+            except EmptyPage:
+                # Если страница больше максимальной, возвращаем последнюю страницу
+                paginated_vacancies = paginator.get_page(paginator.num_pages)
+        except ValueError:
+            # Если per_page не является числом и не 'all', используем значение по умолчанию
+            paginator = Paginator(vacancies, 50)
+            paginated_vacancies = paginator.get_page(1)
     
     context = {
-        'vacancies': vacancies,
+        'vacancies': paginated_vacancies,
         'search_query': search_query,
     }
     

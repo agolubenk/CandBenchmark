@@ -1,6 +1,7 @@
 # hhru/management/commands/scrape_hhru.py
 import requests
 import time
+import random
 from django.core.management.base import BaseCommand
 from hhru.models import Vacancyhh
 from hhru.queries import QUERY_LIST as queries
@@ -23,7 +24,8 @@ class Command(BaseCommand):
 
             url = "https://api.hh.ru/vacancies"
             params = {
-                "text": current_query,  # Подставляем текущий запрос
+                "text": current_query, 
+                "only_with_salary": True,
                 "page": 0,
                 "per_page": 20,  # Количество вакансий на одной странице
             }
@@ -149,5 +151,6 @@ class Command(BaseCommand):
             # Циклический переход к следующему запросу
             current_index = (current_index + 1) % query_count
 
-            self.stdout.write(self.style.WARNING("Ожидание 60 секунд перед следующим запросом..."))
-            time.sleep(60)
+            sleep_time = random.randint(60, 198)
+            self.stdout.write(self.style.WARNING(f"Ожидание {sleep_time} секунд перед следующим запросом..."))
+            time.sleep(sleep_time)

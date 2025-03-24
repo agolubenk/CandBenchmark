@@ -16,7 +16,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'run-gemini-worker-every-20-seconds': {
         'task': 'vacancies.tasks.execute_batches',
-        'schedule': 40
+        'schedule': 60
     },
 }
 

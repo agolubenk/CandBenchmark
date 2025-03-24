@@ -383,6 +383,93 @@
     background: rgba(13, 110, 253, 0.2);
     border-color: rgba(13, 110, 253, 0.2);
   }
+
+  /* Стили для кнопки скачивания Excel */
+  .excel-download-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    width: 200px; /* Фиксированная ширина для выравнивания */
+  }
+
+  .excel-download-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .excel-download-btn i {
+    font-size: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .excel-download-btn {
+      bottom: 70px;
+    }
+  }
+
+  /* Стили для селектора количества записей */
+  .per-page-selector {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .per-page-selector .dropdown-menu {
+    bottom: 100%;
+    top: auto !important;
+    margin-bottom: 5px;
+  }
+
+  .per-page-selector .btn-outline-secondary {
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    width: 170px; /* Такая же ширина, как у кнопки Excel */
+    justify-content: space-between; /* Для лучшего расположения текста и иконки */
+  }
+
+  .per-page-selector .btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .per-page-selector .dropdown-item {
+    padding: 8px 20px;
+    cursor: pointer;
+  }
+
+  .per-page-selector .dropdown-item:hover {
+    background-color: #e9ecef;
+  }
+
+  @media (max-width: 768px) {
+    .per-page-selector {
+      bottom: 130px; /* Отступ для мобильных устройств */
+      right: 20px;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -402,6 +489,7 @@
                    class="form-control" 
                    placeholder="Поиск по вакансиям..." 
                    value="{{ request.GET.search }}">
+            <input type="hidden" name="per_page" value="{{ request.GET.per_page|default:'50' }}">
             <div class="date-range-picker">
               <input type="text" 
                      class="form-control" 
@@ -575,6 +663,20 @@
 
   <!-- Контейнер с таблицей -->
   <div class="table-container">
+    <!-- Селектор количества записей и кнопка Excel -->
+    <div class="per-page-selector dropup">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Показано: {{ request.GET.per_page|default:'50' }}
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item {% if request.GET.per_page == '50' %}active{% endif %}" onclick="changePerPage('50')">50 записей</a></li>
+        <li><a class="dropdown-item {% if request.GET.per_page == '100' %}active{% endif %}" onclick="changePerPage('100')">100 записей</a></li>
+        <li><a class="dropdown-item {% if request.GET.per_page == '200' %}active{% endif %}" onclick="changePerPage('200')">200 записей</a></li>
+        <li><a class="dropdown-item {% if request.GET.per_page == '500' %}active{% endif %}" onclick="changePerPage('500')">500 записей</a></li>
+        <li><a class="dropdown-item {% if request.GET.per_page == 'all' %}active{% endif %}" onclick="changePerPage('all')">Все записи</a></li>
+      </ul>
+    </div>
+
     <!-- Фиксированный заголовок таблицы -->
     <div class="fixed-header">
       <table class="table table-bordered mb-0">
@@ -629,7 +731,7 @@
       <ul class="pagination justify-content-center mb-0">
         {% if vacancies.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo;</a>
+            <a class="page-link" href="?page={{ vacancies.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">&laquo;</a>
           </li>
         {% else %}
           <li class="page-item disabled">
@@ -640,7 +742,7 @@
         <!-- Первая страница всегда видна -->
         {% if vacancies.number > 3 %}
           <li class="page-item">
-            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">1</a>
+            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">1</a>
           </li>
           {% if vacancies.number > 4 %}
             <li class="page-item disabled d-none d-md-block">
@@ -657,7 +759,7 @@
               </li>
             {% else %}
               <li class="page-item">
-                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i }}</a>
+                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ i }}</a>
               </li>
             {% endif %}
           {% endif %}
@@ -671,13 +773,13 @@
             </li>
           {% endif %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ vacancies.paginator.num_pages }}</a>
+            <a class="page-link" href="?page={{ vacancies.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ vacancies.paginator.num_pages }}</a>
           </li>
         {% endif %}
 
         {% if vacancies.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&raquo;</a>
+            <a class="page-link" href="?page={{ vacancies.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">&raquo;</a>
           </li>
         {% else %}
           <li class="page-item disabled">
@@ -688,12 +790,20 @@
     </nav>
   </div>
   {% endif %}
+
+  <!-- Кнопка скачивания Excel -->
+  <button class="excel-download-btn" id="downloadExcel">
+    <i class="bi bi-file-earmark-excel"></i>
+    Скачать Excel
+  </button>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+<!-- Добавляем библиотеку для работы с Excel -->
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Инициализация Date Range Picker
@@ -844,13 +954,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Функция для обновления URL с фильтрами
     function updateUrlWithFilters() {
-        const params = new URLSearchParams();
+        const params = new URLSearchParams(window.location.search);
+        
+        // Сохраняем текущие параметры
+        const currentPerPage = params.get('per_page') || '50';  // Если нет значения, используем 50
+        const currentSearch = params.get('search');
+        const currentDateFrom = params.get('date_from');
+        const currentDateTo = params.get('date_to');
+        
+        // Очищаем параметры и добавляем фильтры
+        params.delete('geo');
+        params.delete('grade');
+        params.delete('currency');
+        
         Object.entries(activeFilters).forEach(([type, values]) => {
             if (values.length > 0) {
-                params.append(type, values.join(','));
+                params.set(type, values.join(','));
             }
         });
-        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        
+        // Восстанавливаем сохраненные параметры
+        params.set('per_page', currentPerPage);  // Всегда добавляем per_page
+        if (currentSearch) params.set('search', currentSearch);
+        if (currentDateFrom) params.set('date_from', currentDateFrom);
+        if (currentDateTo) params.set('date_to', currentDateTo);
+        
+        const newUrl = window.location.pathname + '?' + params.toString();
         window.history.pushState({}, '', newUrl);
     }
 
@@ -1260,6 +1389,106 @@ document.addEventListener('DOMContentLoaded', function() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
     });
+
+    // Обработчик для кнопки скачивания Excel
+    const downloadExcelBtn = document.getElementById('downloadExcel');
+    
+    downloadExcelBtn.addEventListener('click', function() {
+        // Показываем индикатор загрузки на кнопке
+        const originalContent = this.innerHTML;
+        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Загрузка...';
+        this.disabled = true;
+
+        try {
+            // Проверяем наличие таблицы и данных
+            const headerElement = document.querySelector('.fixed-header thead tr');
+            const bodyElement = document.querySelector('.table-scroll tbody');
+            
+            if (!headerElement || !bodyElement) {
+                throw new Error('Не удалось найти элементы таблицы');
+            }
+
+            // Получаем заголовки таблицы
+            const headers = [];
+            headerElement.querySelectorAll('th').forEach((th, index) => {
+                if (index < headerElement.children.length - 1) { // Пропускаем последний столбец
+                    headers.push(th.textContent.trim());
+                }
+            });
+
+            if (headers.length === 0) {
+                throw new Error('Не удалось получить заголовки таблицы');
+            }
+
+            // Получаем данные из таблицы
+            const rows = [];
+            bodyElement.querySelectorAll('tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach((cell, index) => {
+                    if (index < row.children.length - 1) { // Пропускаем последний столбец
+                        rowData.push(cell.textContent.trim());
+                    }
+                });
+                if (rowData.length > 0) {
+                    rows.push(rowData);
+                }
+            });
+
+            if (rows.length === 0) {
+                throw new Error('Таблица не содержит данных');
+            }
+
+            // Создаем рабочую книгу Excel
+            const wb = XLSX.utils.book_new();
+            
+            // Создаем рабочий лист и добавляем данные
+            const wsData = [headers, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Устанавливаем ширину столбцов
+            ws['!cols'] = headers.map(() => ({ wch: 15 })); // wch - ширина в символах
+
+            // Применяем стили к заголовкам (базовое форматирование)
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const address = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (!ws[address]) continue;
+                ws[address].s = {
+                    font: { bold: true },
+                    alignment: { horizontal: 'center', vertical: 'center' }
+                };
+            }
+
+            // Добавляем лист в книгу
+            XLSX.utils.book_append_sheet(wb, ws, "Вакансии");
+
+            // Форматируем текущую дату для имени файла
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+
+            // Сохраняем файл
+            XLSX.writeFile(wb, `vacancies_${day}-${month}-${year}.xlsx`);
+
+            // Восстанавливаем оригинальное состояние кнопки
+            this.innerHTML = originalContent;
+            this.disabled = false;
+        } catch (error) {
+            console.error('Подробная ошибка:', error);
+            // Восстанавливаем оригинальное состояние кнопки
+            this.innerHTML = originalContent;
+            this.disabled = false;
+            alert(`Произошла ошибка при создании файла: ${error.message}`);
+        }
+    });
+
+    // Функция изменения количества записей на странице
+    window.changePerPage = function(value) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('per_page', value);  // Всегда устанавливаем значение
+        window.location.href = window.location.pathname + '?' + params.toString();
+    }
 });
 </script>
 {% endblock %}
