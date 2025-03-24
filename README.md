@@ -4,11 +4,11 @@
 
 ### Установка
 ```bash
-python -m venv .venv1
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python manage.py makemigrations
-python manage.py migrate
+python3 manage.py makemigrations
+python3 manage.py migrate
 ```
 
 ### Запуск
