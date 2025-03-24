@@ -4,11 +4,11 @@
 
 ### Установка
 ```bash
-python3 -m venv .venv
+python -m venv .venv1
 source .venv/bin/activate
 pip install -r requirements.txt
-python3 manage.py makemigrations
-python3 manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
 ```
 
 ### Запуск
@@ -16,4 +16,4 @@ python3 manage.py migrate
 docker compose up -d --build
 ```
 ### Запуск сборщика по hh.ru
-python3 manage.py scrape_hhru
+python manage.py scrape_hhru

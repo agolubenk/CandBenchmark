@@ -59,7 +59,7 @@ GRADE_SYNONYMS = {
     # ... и т.п.
 }
 
-VALID_BASE_GRADES = {'trainee', 'junior', 'middle', 'senior', 'lead', 'head'}
+VALID_BASE_GRADES = {'trainee', 'junior', 'middle', 'senior', 'lead', 'head', 'C-level'}
 
 def unify_grade(input_grade):
     """
