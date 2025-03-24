@@ -402,13 +402,31 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     z-index: 1000;
-    width: 200px; /* Фиксированная ширина для выравнивания */
+    width: 200px;
   }
 
-  .excel-download-btn:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  .excel-download-btn.waiting {
+    background-color: #98d7a9; /* Бледно-зеленый цвет */
+    cursor: default;
+    color: #2c5235; /* Темно-зеленый цвет для текста */
+  }
+
+  .excel-download-btn.waiting .spinner-border {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 8px;
+    border-color: #2c5235; /* Цвет спиннера */
+    border-right-color: transparent;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  .excel-download-btn.waiting {
+    animation: pulse 1.5s infinite;
   }
 
   .excel-download-btn i {
@@ -469,6 +487,35 @@
       bottom: 130px; /* Отступ для мобильных устройств */
       right: 20px;
     }
+  }
+
+  /* Стили для popover подтверждения */
+  .popover {
+    max-width: 400px;
+  }
+
+  .popover-body {
+    padding: 15px;
+  }
+
+  .popover-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end;
+  }
+
+  .popover-message {
+    margin-bottom: 10px;
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .popover-buttons .btn {
+    min-width: 80px;
+    font-size: 14px;
+    padding: 6px 12px;
   }
 </style>
 {% endblock %}
@@ -791,10 +838,26 @@
   </div>
   {% endif %}
 
-  <!-- Кнопка скачивания Excel -->
-  <button class="excel-download-btn" id="downloadExcel">
-    <i class="bi bi-file-earmark-excel"></i>
-    Скачать Excel
+  <!-- Кнопка скачивания Excel с popover -->
+  <button class="excel-download-btn" 
+          id="downloadExcel" 
+          data-bs-container="body" 
+          data-bs-toggle="popover" 
+          data-bs-placement="top" 
+          data-bs-html="true"
+          data-bs-content='
+            <div class="popover-message">
+                Вы выбрали необходимое кол-во страниц? Если нет, то выберите для начала количество страниц для загрузки кнопкой выше.
+            </div>
+            <div class="popover-buttons">
+                <button type="button" class="btn btn-outline-secondary" onclick="closeExcelPopover()">Нет</button>
+                <button type="button" class="btn btn-success" onclick="confirmExcelDownload()">Да, скачать</button>
+            </div>
+          '>
+    <span class="button-content">
+      <i class="bi bi-file-earmark-excel"></i>
+      <span class="button-text">Скачать Excel</span>
+    </span>
   </button>
 </div>
 {% endblock %}
@@ -1390,15 +1453,67 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(a);
     });
 
-    // Обработчик для кнопки скачивания Excel
+    // Инициализация popover для кнопки Excel
     const downloadExcelBtn = document.getElementById('downloadExcel');
     
-    downloadExcelBtn.addEventListener('click', function() {
-        // Показываем индикатор загрузки на кнопке
-        const originalContent = this.innerHTML;
-        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Загрузка...';
-        this.disabled = true;
+    // Инициализируем popover с настройками
+    const popover = new bootstrap.Popover(downloadExcelBtn, {
+        html: true,
+        trigger: 'manual',
+        sanitize: false
+    });
 
+    // Показываем popover при клике на кнопку
+    downloadExcelBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Меняем состояние кнопки
+        this.classList.add('waiting');
+        const buttonContent = this.querySelector('.button-content');
+        buttonContent.innerHTML = `
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <span class="button-text">Ожидаю</span>
+        `;
+        
+        popover.show();
+    });
+
+    // Функция закрытия popover
+    window.closeExcelPopover = function() {
+        popover.hide();
+        // Возвращаем исходное состояние кнопки
+        downloadExcelBtn.classList.remove('waiting');
+        const buttonContent = downloadExcelBtn.querySelector('.button-content');
+        buttonContent.innerHTML = `
+            <i class="bi bi-file-earmark-excel"></i>
+            <span class="button-text">Скачать Excel</span>
+        `;
+    };
+
+    // Закрываем popover при клике вне его
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.popover') && 
+            !e.target.closest('#downloadExcel')) {
+            closeExcelPopover();
+        }
+    });
+
+    // Функция подтверждения и скачивания
+    window.confirmExcelDownload = function() {
+        // Закрываем popover
+        popover.hide();
+        
+        // Возвращаем кнопку в исходное состояние
+        downloadExcelBtn.classList.remove('waiting');
+        const buttonContent = downloadExcelBtn.querySelector('.button-content');
+        buttonContent.innerHTML = `
+            <i class="bi bi-file-earmark-excel"></i>
+            <span class="button-text">Скачать Excel</span>
+        `;
+        
         try {
             // Проверяем наличие таблицы и данных
             const headerElement = document.querySelector('.fixed-header thead tr');
@@ -1411,7 +1526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Получаем заголовки таблицы
             const headers = [];
             headerElement.querySelectorAll('th').forEach((th, index) => {
-                if (index < headerElement.children.length - 1) { // Пропускаем последний столбец
+                if (index < headerElement.children.length - 1) {
                     headers.push(th.textContent.trim());
                 }
             });
@@ -1425,7 +1540,7 @@ document.addEventListener('DOMContentLoaded', function() {
             bodyElement.querySelectorAll('tr').forEach(row => {
                 const rowData = [];
                 row.querySelectorAll('td').forEach((cell, index) => {
-                    if (index < row.children.length - 1) { // Пропускаем последний столбец
+                    if (index < row.children.length - 1) {
                         rowData.push(cell.textContent.trim());
                     }
                 });
@@ -1446,9 +1561,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const ws = XLSX.utils.aoa_to_sheet(wsData);
 
             // Устанавливаем ширину столбцов
-            ws['!cols'] = headers.map(() => ({ wch: 15 })); // wch - ширина в символах
+            ws['!cols'] = headers.map(() => ({ wch: 15 }));
 
-            // Применяем стили к заголовкам (базовое форматирование)
+            // Применяем стили к заголовкам
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let C = range.s.c; C <= range.e.c; ++C) {
                 const address = XLSX.utils.encode_cell({ r: 0, c: C });
@@ -1470,18 +1585,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Сохраняем файл
             XLSX.writeFile(wb, `vacancies_${day}-${month}-${year}.xlsx`);
-
-            // Восстанавливаем оригинальное состояние кнопки
-            this.innerHTML = originalContent;
-            this.disabled = false;
         } catch (error) {
             console.error('Подробная ошибка:', error);
-            // Восстанавливаем оригинальное состояние кнопки
-            this.innerHTML = originalContent;
-            this.disabled = false;
             alert(`Произошла ошибка при создании файла: ${error.message}`);
         }
-    });
+    };
 
     // Функция изменения количества записей на странице
     window.changePerPage = function(value) {
