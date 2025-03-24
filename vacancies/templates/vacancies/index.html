@@ -2,280 +2,8 @@
 
 {% block title %}Список вакансий{% endblock %}
 
-{% block content %}
-<div class="d-flex flex-column vh-100">
-  <!-- Фиксированная верхняя секция с заголовком и поиском -->
-  <div class="header-container mt-2">
-    <div class="row align-items-center">
-      <div class="col-md-4 mb-3 mb-md-0">
-        <h1 class="mb-0">Список вакансий</h1>
-      </div>
-      <div class="col-md-8">
-        <div class="d-flex gap-2">
-          <form method="GET" action="{% url 'index' %}" class="d-flex gap-2 flex-grow-1">
-            <input type="text" 
-                   name="search" 
-                   class="form-control" 
-                   placeholder="Поиск по вакансиям..." 
-                   value="{{ request.GET.search }}">
-            <button type="submit" class="btn btn-primary">Поиск</button>
-          </form>
-          <!-- Кнопка AI-анализа -->
-          <button type="button" 
-                  class="btn btn-success ai-analyze-btn" 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#aiAnalysisModal">
-            <i class="bi bi-robot"></i> AI-анализ
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Модальное окно для AI-анализа -->
-  <div class="modal fade" id="aiAnalysisModal" tabindex="-1" aria-labelledby="aiAnalysisModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="aiAnalysisModalLabel">
-            <i class="bi bi-robot"></i> AI-анализ вакансий
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Секция с текущими фильтрами -->
-          <div class="current-filters mb-3">
-            <h6>Текущие фильтры:</h6>
-            <div class="filter-tags" id="filterTags">
-              <!-- Теги фильтров будут добавляться динамически -->
-            </div>
-          </div>
-
-          <!-- Секция с фильтрами -->
-          <div class="filters-section mb-3">
-            <div class="accordion" id="filtersAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
-                            <i class="bi bi-funnel me-2"></i>Фильтры
-                        </button>
-                    </h2>
-                    <div id="filtersCollapse" class="accordion-collapse collapse" aria-labelledby="filtersAccordion" data-bs-parent="#filtersAccordion">
-                        <div class="accordion-body">
-                            <div class="filter-buttons">
-                                <div class="filter-group mb-2">
-                                    <label class="d-block mb-1">Локация:</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Беларусь">Беларусь</button>
-                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Россия">Россия</button>
-                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Польша">Польша</button>
-                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Украина">Украина</button>
-                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Казахстан">Казахстан</button>
-                                    </div>
-                                </div>
-                                <div class="filter-group mb-2">
-                                    <label class="d-block mb-1">Грейд:</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Junior">Junior</button>
-                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Middle">Middle</button>
-                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Senior">Senior</button>
-                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Lead">Lead</button>
-                                    </div>
-                                </div>
-                                <div class="filter-group mb-2">
-                                    <label class="d-block mb-1">Валюта:</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="BYN">BYN</button>
-                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="USD">USD</button>
-                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="EUR">EUR</button>
-                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="RUB">RUB</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-          </div>
-
-          <!-- Секция с промптом -->
-          <div class="prompt-section mb-3">
-            <h6>Выберите тип анализа:</h6>
-            <div class="d-flex gap-2 align-items-start">
-                <select class="form-select" id="promptSelect">
-                    <option value="salary">Анализ зарплат и тенденций</option>
-                    <option value="skills">Анализ требуемых навыков</option>
-                    <option value="companies">Анализ компаний и их предложений</option>
-                    <option value="locations">Анализ географического распределения</option>
-                    <option value="custom">Пользовательский запрос</option>
-                </select>
-                <button type="button" class="btn btn-primary" id="startAnalysis">
-                    <i class="bi bi-play-fill"></i> Анализ
-                </button>
-            </div>
-            <div class="custom-prompt-container d-none mt-2">
-                <textarea class="form-control" 
-                          id="customPrompt" 
-                          rows="3" 
-                          placeholder="Введите ваш запрос для анализа..."></textarea>
-            </div>
-          </div>
-
-          <!-- Чат с результатами -->
-          <div class="chat-container mb-3 d-none" id="chatContainer">
-            <div class="chat-messages" id="chatMessages">
-                <!-- Сообщения будут добавляться динамически -->
-            </div>
-            <!-- Форма ввода сообщения -->
-            <div class="chat-input-container">
-                <form id="chatForm" class="d-flex gap-2">
-                    <input type="text" 
-                           class="form-control" 
-                           id="messageInput" 
-                           placeholder="Введите сообщение..."
-                           autocomplete="off">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-send"></i> Отправить
-                        </button>
-                        <button type="button" class="btn btn-success download-btn" id="downloadAnalysis" disabled>
-                            <i class="bi bi-file-pdf"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" id="startAnalysis">
-            <i class="bi bi-play-fill"></i> Начать анализ
-          </button>
-          <button type="button" class="btn btn-success" id="downloadAnalysis" disabled>
-            <i class="bi bi-file-pdf"></i> Скачать HTML
-          </button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Контейнер с таблицей -->
-  <div class="table-container">
-    <!-- Фиксированный заголовок таблицы -->
-    <div class="fixed-header">
-      <table class="table table-bordered mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Компания</th>
-            <th>Локация</th>
-            <th>Специализация</th>
-            <th>Грейд</th>
-            <th>ЗП от</th>
-            <th>ЗП до</th>
-            <th>Валюта</th>
-            <th>Действие</th>
-          </tr>
-        </thead>
-      </table>
-    </div>
-    
-    <!-- Скроллируемое тело таблицы -->
-    <div class="table-scroll">
-      <table class="table table-bordered table-hover mb-0">
-        <tbody>
-          {% for vac in vacancies %}
-          <tr>
-            <td>{{ vac.company }}</td>
-            <td>{{ vac.geo }}</td>
-            <td>{{ vac.specialization }}</td>
-            <td>{{ vac.grade }}</td>
-            <td>{{ vac.salary_min }}</td>
-            <td>{{ vac.salary_max }}</td>
-            <td>{{ vac.currency }}</td>
-            <td>
-              <a href="{% url 'vacancy_detail' vac.id %}" class="btn btn-outline-info btn-sm">
-                <i class="bi bi-eye-fill"></i> Info
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="8" class="text-center">Нет вакансий для отображения.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Фиксированная пагинация внизу -->
-  {% if vacancies.has_other_pages %}
-  <div class="pagination-container">
-    <nav aria-label="Page navigation">
-      <ul class="pagination justify-content-center mb-0">
-        {% if vacancies.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo;</a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link">&laquo;</span>
-          </li>
-        {% endif %}
-
-        <!-- Первая страница всегда видна -->
-        {% if vacancies.number > 3 %}
-          <li class="page-item">
-            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">1</a>
-          </li>
-          {% if vacancies.number > 4 %}
-            <li class="page-item disabled d-none d-md-block">
-              <span class="page-link">...</span>
-            </li>
-          {% endif %}
-        {% endif %}
-
-        {% for i in vacancies.paginator.page_range %}
-          {% if i > vacancies.number|add:'-3' and i < vacancies.number|add:'3' %}
-            {% if vacancies.number == i %}
-              <li class="page-item active">
-                <span class="page-link">{{ i }}</span>
-              </li>
-            {% else %}
-              <li class="page-item">
-                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i }}</a>
-              </li>
-            {% endif %}
-          {% endif %}
-        {% endfor %}
-
-        <!-- Последняя страница всегда видна -->
-        {% if vacancies.number < vacancies.paginator.num_pages|add:'-2' %}
-          {% if vacancies.number < vacancies.paginator.num_pages|add:'-3' %}
-            <li class="page-item disabled d-none d-md-block">
-              <span class="page-link">...</span>
-            </li>
-          {% endif %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ vacancies.paginator.num_pages }}</a>
-          </li>
-        {% endif %}
-
-        {% if vacancies.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ vacancies.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&raquo;</a>
-          </li>
-        {% else %}
-          <li class="page-item disabled">
-            <span class="page-link">&raquo;</span>
-          </li>
-        {% endif %}
-      </ul>
-    </nav>
-  </div>
-  {% endif %}
-</div>
-
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
   /* Стили для фиксированной верхней секции */
   .header-container {
@@ -587,12 +315,490 @@
     opacity: 1;
     visibility: visible;
   }
+
+  /* Стили для Date Range Picker */
+  .date-range-picker {
+    position: relative;
+    min-width: 300px;
+  }
+  .date-range-picker .form-control {
+    background-color: #fff;
+    cursor: pointer;
+  }
+  .date-range-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    display: none;
+    width: 100%;
+  }
+  .date-range-dropdown.show {
+    display: block;
+  }
+  .date-range-option {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+  }
+  .date-range-option:hover {
+    background-color: #f8f9fa;
+  }
+  .custom-range-picker {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+  }
+  .custom-range-picker.show {
+    display: block;
+  }
+  .flatpickr-calendar {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+  }
+  .flatpickr-day.selected {
+    background: #0d6efd;
+    border-color: #0d6efd;
+  }
+  .flatpickr-day.selected:hover {
+    background: #0b5ed7;
+    border-color: #0a58ca;
+  }
+  .flatpickr-day.inRange {
+    background: rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.1);
+  }
+  .flatpickr-day.inRange:hover {
+    background: rgba(13, 110, 253, 0.2);
+    border-color: rgba(13, 110, 253, 0.2);
+  }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column vh-100">
+  <!-- Фиксированная верхняя секция с заголовком и поиском -->
+  <div class="header-container mt-2">
+    <div class="row align-items-center">
+      <div class="col-md-4 mb-3 mb-md-0">
+        <h1 class="mb-0">Список вакансий</h1>
+      </div>
+      <div class="col-md-8">
+        <div class="d-flex gap-2">
+          <form method="GET" action="{% url 'index' %}" class="d-flex gap-2 flex-grow-1">
+            <input type="text" 
+                   name="search" 
+                   class="form-control" 
+                   placeholder="Поиск по вакансиям..." 
+                   value="{{ request.GET.search }}">
+            <div class="date-range-picker">
+              <input type="text" 
+                     class="form-control" 
+                     id="dateRangePicker" 
+                     placeholder="Выберите период" 
+                     readonly>
+              <div class="date-range-dropdown">
+                <div class="date-range-option" data-range="today">Сегодня</div>
+                <div class="date-range-option" data-range="last-week">Последняя неделя</div>
+                <div class="date-range-option" data-range="last-month">Последний месяц</div>
+                <div class="date-range-option" data-range="current-month">Текущий месяц</div>
+                <div class="date-range-option" data-range="last-quarter">Последний квартал</div>
+                <div class="date-range-option" data-range="current-quarter">Текущий квартал</div>
+                <div class="date-range-option" data-range="last-6-months">Последние полгода</div>
+                <div class="date-range-option" data-range="current-year">Текущий год</div>
+                <div class="date-range-option" data-range="last-year">Последний год</div>
+                <div class="date-range-option" data-range="all-time">Все время</div>
+                <div class="date-range-option" data-range="custom">Кастомный период</div>
+              </div>
+              <div class="custom-range-picker">
+                <div class="row">
+                  <div class="col-6">
+                    <input type="date" name="date_from" class="form-control" placeholder="С" value="{{ request.GET.date_from }}">
+                  </div>
+                  <div class="col-6">
+                    <input type="date" name="date_to" class="form-control" placeholder="По" value="{{ request.GET.date_to }}">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Поиск</button>
+          </form>
+          <!-- Кнопка AI-анализа -->
+          <button type="button" 
+                  class="btn btn-success ai-analyze-btn" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#aiAnalysisModal">
+            <i class="bi bi-robot"></i> AI-анализ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для AI-анализа -->
+  <div class="modal fade" id="aiAnalysisModal" tabindex="-1" aria-labelledby="aiAnalysisModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="aiAnalysisModalLabel">
+            <i class="bi bi-robot"></i> AI-анализ вакансий
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Секция с текущими фильтрами -->
+          <div class="current-filters mb-3">
+            <h6>Текущие фильтры:</h6>
+            <div class="filter-tags" id="filterTags">
+              <!-- Теги фильтров будут добавляться динамически -->
+            </div>
+          </div>
+
+          <!-- Секция с фильтрами -->
+          <div class="filters-section mb-3">
+            <div class="accordion" id="filtersAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
+                            <i class="bi bi-funnel me-2"></i>Фильтры
+                        </button>
+                    </h2>
+                    <div id="filtersCollapse" class="accordion-collapse collapse" aria-labelledby="filtersAccordion" data-bs-parent="#filtersAccordion">
+                        <div class="accordion-body">
+                            <div class="filter-buttons">
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Локация:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Беларусь">Беларусь</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Россия">Россия</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Польша">Польша</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Украина">Украина</button>
+                                        <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="geo" data-value="Казахстан">Казахстан</button>
+                                    </div>
+                                </div>
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Грейд:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Junior">Junior</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Middle">Middle</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Senior">Senior</button>
+                                        <button class="btn btn-outline-success btn-sm filter-btn" data-filter="grade" data-value="Lead">Lead</button>
+                                    </div>
+                                </div>
+                                <div class="filter-group mb-2">
+                                    <label class="d-block mb-1">Валюта:</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="BYN">BYN</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="USD">USD</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="EUR">EUR</button>
+                                        <button class="btn btn-outline-info btn-sm filter-btn" data-filter="currency" data-value="RUB">RUB</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+
+          <!-- Секция с промптом -->
+          <div class="prompt-section mb-3">
+            <h6>Выберите тип анализа:</h6>
+            <div class="d-flex gap-2 align-items-start">
+                <select class="form-select" id="promptSelect">
+                    <option value="salary">Анализ зарплат и тенденций</option>
+                    <option value="skills">Анализ требуемых навыков</option>
+                    <option value="companies">Анализ компаний и их предложений</option>
+                    <option value="locations">Анализ географического распределения</option>
+                    <option value="custom">Пользовательский запрос</option>
+                </select>
+                <button type="button" class="btn btn-primary" id="startAnalysis">
+                    <i class="bi bi-play-fill"></i> Анализ
+                </button>
+            </div>
+            <div class="custom-prompt-container d-none mt-2">
+                <textarea class="form-control" 
+                          id="customPrompt" 
+                          rows="3" 
+                          placeholder="Введите ваш запрос для анализа..."></textarea>
+            </div>
+          </div>
+
+          <!-- Чат с результатами -->
+          <div class="chat-container mb-3 d-none" id="chatContainer">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Сообщения будут добавляться динамически -->
+            </div>
+            <!-- Форма ввода сообщения -->
+            <div class="chat-input-container">
+                <form id="chatForm" class="d-flex gap-2">
+                    <input type="text" 
+                           class="form-control" 
+                           id="messageInput" 
+                           placeholder="Введите сообщение..."
+                           autocomplete="off">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Отправить
+                        </button>
+                        <button type="button" class="btn btn-success download-btn" id="downloadAnalysis" disabled>
+                            <i class="bi bi-file-pdf"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="startAnalysis">
+            <i class="bi bi-play-fill"></i> Начать анализ
+          </button>
+          <button type="button" class="btn btn-success" id="downloadAnalysis" disabled>
+            <i class="bi bi-file-pdf"></i> Скачать HTML
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контейнер с таблицей -->
+  <div class="table-container">
+    <!-- Фиксированный заголовок таблицы -->
+    <div class="fixed-header">
+      <table class="table table-bordered mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Компания</th>
+            <th>Локация</th>
+            <th>Специализация</th>
+            <th>Грейд</th>
+            <th>ЗП от</th>
+            <th>ЗП до</th>
+            <th>Валюта</th>
+            <th>Действие</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    
+    <!-- Скроллируемое тело таблицы -->
+    <div class="table-scroll">
+      <table class="table table-bordered table-hover mb-0">
+        <tbody>
+          {% for vac in vacancies %}
+          <tr>
+            <td>{{ vac.company }}</td>
+            <td>{{ vac.geo }}</td>
+            <td>{{ vac.specialization }}</td>
+            <td>{{ vac.grade }}</td>
+            <td>{{ vac.salary_min }}</td>
+            <td>{{ vac.salary_max }}</td>
+            <td>{{ vac.currency }}</td>
+            <td>
+              <a href="{% url 'vacancy_detail' vac.id %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-eye-fill"></i> Info
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">Нет вакансий для отображения.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Фиксированная пагинация внизу -->
+  {% if vacancies.has_other_pages %}
+  <div class="pagination-container">
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center mb-0">
+        {% if vacancies.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+          </li>
+        {% endif %}
+
+        <!-- Первая страница всегда видна -->
+        {% if vacancies.number > 3 %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">1</a>
+          </li>
+          {% if vacancies.number > 4 %}
+            <li class="page-item disabled d-none d-md-block">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+        {% endif %}
+
+        {% for i in vacancies.paginator.page_range %}
+          {% if i > vacancies.number|add:'-3' and i < vacancies.number|add:'3' %}
+            {% if vacancies.number == i %}
+              <li class="page-item active">
+                <span class="page-link">{{ i }}</span>
+              </li>
+            {% else %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i }}</a>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+
+        <!-- Последняя страница всегда видна -->
+        {% if vacancies.number < vacancies.paginator.num_pages|add:'-2' %}
+          {% if vacancies.number < vacancies.paginator.num_pages|add:'-3' %}
+            <li class="page-item disabled d-none d-md-block">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ vacancies.paginator.num_pages }}</a>
+          </li>
+        {% endif %}
+
+        {% if vacancies.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ vacancies.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&raquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
 
 {% block extra_js %}
-<!-- Удаляем библиотеку jsPDF, так как она больше не нужна -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация Date Range Picker
+    const dateRangePicker = document.getElementById('dateRangePicker');
+    const dateRangeDropdown = document.querySelector('.date-range-dropdown');
+    const customRangePicker = document.querySelector('.custom-range-picker');
+    const dateFromInput = document.querySelector('input[name="date_from"]');
+    const dateToInput = document.querySelector('input[name="date_to"]');
+
+    // Инициализация Flatpickr для кастомного выбора дат
+    const dateFromPicker = flatpickr(dateFromInput, {
+        locale: 'ru',
+        dateFormat: 'Y-m-d',
+        onChange: function(selectedDates) {
+            updateDateRangeDisplay();
+        }
+    });
+
+    const dateToPicker = flatpickr(dateToInput, {
+        locale: 'ru',
+        dateFormat: 'Y-m-d',
+        onChange: function(selectedDates) {
+            updateDateRangeDisplay();
+        }
+    });
+
+    // Функция обновления отображения выбранного диапазона дат
+    function updateDateRangeDisplay() {
+        if (dateFromInput.value && dateToInput.value) {
+            const startDate = new Date(dateFromInput.value);
+            const endDate = new Date(dateToInput.value);
+            dateRangePicker.value = `${startDate.toLocaleDateString('ru-RU')} - ${endDate.toLocaleDateString('ru-RU')}`;
+            customRangePicker.classList.remove('show');
+        }
+    }
+
+    // Обработка клика по полю выбора даты
+    dateRangePicker.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dateRangeDropdown.classList.toggle('show');
+    });
+
+    // Закрытие выпадающего списка при клике вне его
+    document.addEventListener('click', function(e) {
+        if (!dateRangePicker.contains(e.target)) {
+            dateRangeDropdown.classList.remove('show');
+            customRangePicker.classList.remove('show');
+        }
+    });
+
+    // Обработка выбора предустановленного периода
+    document.querySelectorAll('.date-range-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const range = this.dataset.range;
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+
+            switch(range) {
+                case 'today':
+                    break;
+                case 'last-week':
+                    startDate.setDate(today.getDate() - 7);
+                    break;
+                case 'last-month':
+                    startDate.setMonth(today.getMonth() - 1);
+                    break;
+                case 'current-month':
+                    startDate.setDate(1);
+                    break;
+                case 'last-quarter':
+                    startDate.setMonth(today.getMonth() - 3);
+                    break;
+                case 'current-quarter':
+                    const currentQuarter = Math.floor(today.getMonth() / 3) * 3;
+                    startDate.setMonth(currentQuarter);
+                    startDate.setDate(1);
+                    break;
+                case 'last-6-months':
+                    startDate.setMonth(today.getMonth() - 6);
+                    break;
+                case 'current-year':
+                    startDate.setMonth(0);
+                    startDate.setDate(1);
+                    break;
+                case 'last-year':
+                    startDate.setFullYear(today.getFullYear() - 1);
+                    endDate.setFullYear(today.getFullYear() - 1);
+                    break;
+                case 'all-time':
+                    startDate = new Date(0);
+                    break;
+                case 'custom':
+                    dateRangeDropdown.classList.remove('show');
+                    customRangePicker.classList.add('show');
+                    return;
+            }
+
+            if (range !== 'custom') {
+                dateFromPicker.setDate(startDate);
+                dateToPicker.setDate(endDate);
+                dateRangePicker.value = `${startDate.toLocaleDateString('ru-RU')} - ${endDate.toLocaleDateString('ru-RU')}`;
+                dateRangeDropdown.classList.remove('show');
+            }
+        });
+    });
+
+    // Остальной JavaScript код для AI-анализа
     const promptSelect = document.getElementById('promptSelect');
     const customPromptContainer = document.querySelector('.custom-prompt-container');
     const chatMessages = document.getElementById('chatMessages');
@@ -1039,5 +1245,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %}
 {% endblock %}

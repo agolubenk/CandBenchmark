@@ -39,6 +39,8 @@ def vacancy_detail(request, vacancy_id):
 
 def index(request):
     search_query = request.GET.get('search', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
     
     if search_query:
         vacancies = Vacancy.objects.filter(
@@ -50,6 +52,13 @@ def index(request):
         ).order_by('-date_posted')
     else:
         vacancies = Vacancy.objects.all().order_by('-date_posted')
+    
+    if date_from:
+        df = datetime.strptime(date_from, '%Y-%m-%d')
+        vacancies = vacancies.filter(date_posted__gte=df)
+    if date_to:
+        dt = datetime.strptime(date_to, '%Y-%m-%d')
+        vacancies = vacancies.filter(date_posted__lte=dt)
     
     # Настраиваем пагинацию
     paginator = Paginator(vacancies, 50)  # 50 вакансий на страницу
@@ -592,7 +601,7 @@ def edit_vacancy(request, vacancy_id):
 def handle():
     print('обновляем курсы валют')
     try:
-        response = requests.get('https://www.nbrb.by/api/exrates/rates?periodicity=0', verify=False)
+        response = requests.get('https://api.nbrb.by/exrates/rates?periodicity=0', verify=False)
         if response.status_code == 200:
             data = response.json()
             updated_count = 0
