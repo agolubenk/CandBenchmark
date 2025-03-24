@@ -316,7 +316,7 @@
     visibility: visible;
   }
 
-  /* Стили для Date Range Picker */
+  /* Обновленные стили для Date Range Picker */
   .date-range-picker {
     position: relative;
     min-width: 300px;
@@ -355,6 +355,8 @@
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #dee2e6;
+    position: relative;
+    z-index: 1001;
   }
   .custom-range-picker.show {
     display: block;
@@ -363,6 +365,7 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
+    z-index: 1002;
   }
   .flatpickr-day.selected {
     background: #0d6efd;
@@ -421,10 +424,10 @@
               <div class="custom-range-picker">
                 <div class="row">
                   <div class="col-6">
-                    <input type="date" name="date_from" class="form-control" placeholder="С" value="{{ request.GET.date_from }}">
+                    <input type="text" name="date_from" class="form-control" placeholder="С" value="{{ request.GET.date_from }}">
                   </div>
                   <div class="col-6">
-                    <input type="date" name="date_to" class="form-control" placeholder="По" value="{{ request.GET.date_to }}">
+                    <input type="text" name="date_to" class="form-control" placeholder="По" value="{{ request.GET.date_to }}">
                   </div>
                 </div>
               </div>
@@ -705,7 +708,11 @@ document.addEventListener('DOMContentLoaded', function() {
         locale: 'ru',
         dateFormat: 'Y-m-d',
         onChange: function(selectedDates) {
-            updateDateRangeDisplay();
+            // Обновляем минимальную дату для конечного календаря
+            dateToPicker.set('minDate', selectedDates[0]);
+            // Закрываем первый календарь и открываем второй
+            dateFromPicker.close();
+            dateToPicker.open();
         }
     });
 
@@ -724,6 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const endDate = new Date(dateToInput.value);
             dateRangePicker.value = `${startDate.toLocaleDateString('ru-RU')} - ${endDate.toLocaleDateString('ru-RU')}`;
             customRangePicker.classList.remove('show');
+            dateRangeDropdown.classList.remove('show');
         }
     }
 
@@ -731,11 +739,12 @@ document.addEventListener('DOMContentLoaded', function() {
     dateRangePicker.addEventListener('click', function(e) {
         e.stopPropagation();
         dateRangeDropdown.classList.toggle('show');
+        customRangePicker.classList.remove('show');
     });
 
     // Закрытие выпадающего списка при клике вне его
     document.addEventListener('click', function(e) {
-        if (!dateRangePicker.contains(e.target)) {
+        if (!dateRangePicker.contains(e.target) && !e.target.closest('.flatpickr-calendar')) {
             dateRangeDropdown.classList.remove('show');
             customRangePicker.classList.remove('show');
         }
@@ -786,6 +795,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'custom':
                     dateRangeDropdown.classList.remove('show');
                     customRangePicker.classList.add('show');
+                    // Сбрасываем ограничения дат при выборе кастомного периода
+                    dateToPicker.set('minDate', null);
+                    // Очищаем поля дат
+                    dateFromInput.value = '';
+                    dateToInput.value = '';
+                    // Открываем календарь для начальной даты
+                    dateFromPicker.open();
                     return;
             }
 
@@ -794,6 +810,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 dateToPicker.setDate(endDate);
                 dateRangePicker.value = `${startDate.toLocaleDateString('ru-RU')} - ${endDate.toLocaleDateString('ru-RU')}`;
                 dateRangeDropdown.classList.remove('show');
+                customRangePicker.classList.remove('show');
             }
         });
     });
