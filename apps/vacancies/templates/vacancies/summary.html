@@ -258,7 +258,7 @@
         function filterTables() {
             const specializationFilter = specializationInput.value.toLowerCase();
             const gradeFilter = gradeInput.value.toLowerCase();
-            const geoFilter = geoInput.value.toLowerCase();
+            const geoFilter = geoInput.value.toLowerCase().split(',').map(geo => geo.trim());
 
             const rows = document.querySelectorAll("table tbody tr");
             rows.forEach(row => {
@@ -275,8 +275,14 @@
                     if (gradeFilter && !cellGrade.includes(gradeFilter)) {
                         visible = false;
                     }
-                    if (geoFilter && !cellGeo.includes(geoFilter)) {
-                        visible = false;
+                    if (geoFilter.length > 0 && geoFilter[0] !== '') {
+                        // Проверяем, содержит ли строка хотя бы одну из указанных стран
+                        const hasMatchingCountry = geoFilter.some(country => 
+                            cellGeo.includes(country)
+                        );
+                        if (!hasMatchingCountry) {
+                            visible = false;
+                        }
                     }
                     if (isRBFilterActive && !cellGeo.includes("беларусь")) {
                         visible = false;
