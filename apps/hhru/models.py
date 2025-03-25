@@ -1,10 +1,7 @@
 from django.db import models
 
-# Create your models here.
-# hhru/models.py
-from django.db import models
 
-class Vacancyhh(models.Model):
+class VacancyHH(models.Model):
     hh_id = models.CharField(max_length=50, unique=True, verbose_name="ID вакансии hh.ru")
     title = models.CharField(max_length=255, verbose_name="Название вакансии")
     employer_name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Название компании")

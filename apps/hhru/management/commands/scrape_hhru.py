@@ -3,7 +3,7 @@ import requests
 import time
 import random
 from django.core.management.base import BaseCommand
-from apps.hhru.models import Vacancyhh
+from apps.hhru.models import VacancyHH
 from apps.hhru.queries import QUERY_LIST as queries
 from apps.vacancies.tasks import process_hhru_data
 
@@ -110,7 +110,7 @@ class Command(BaseCommand):
                         area = vacancy_detail.get("area", {}).get("name", "")
 
                         # Проверяем, существует ли вакансия с данным hh_id
-                        vacancy = Vacancyhh.objects.filter(hh_id=hh_id).first()
+                        vacancy = VacancyHH.objects.filter(hh_id=hh_id).first()
                         if vacancy:
                             vacancy.title = title
                             vacancy.description = description
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                             vacancy.save()
                             self.stdout.write(f"Обновлена вакансия: {title}")
                         else:
-                            Vacancyhh.objects.create(
+                            VacancyHH.objects.create(
                                 hh_id=hh_id,
                                 title=title,
                                 description=description,

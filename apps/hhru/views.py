@@ -1,12 +1,12 @@
 from django.views.generic import ListView, DetailView
-from apps.hhru.models import Vacancyhh
+from apps.hhru.models import VacancyHH
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Create your views here.
 
 class HHVacancyListView(LoginRequiredMixin, ListView):
-    model = Vacancyhh
+    model = VacancyHH
     template_name = 'hhru/vacancy_list.html'
     context_object_name = 'vacancies'
     paginate_by = 50
@@ -28,7 +28,7 @@ class HHVacancyListView(LoginRequiredMixin, ListView):
         return queryset
 
 class HHVacancyDetailView(LoginRequiredMixin, DetailView):
-    model = Vacancyhh
+    model = VacancyHH
     template_name = 'hhru/vacancy_detail.html'
     context_object_name = 'vacancy'
     login_url = '/login/'  # URL для перенаправления неавторизованных пользователей

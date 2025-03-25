@@ -417,7 +417,6 @@ def upload_excel(request):
     сохраняем в session -> редирект на preview_excel.
     """
     # (код остался без изменений)
-    from django.contrib import messages
     from apps.vacancies.forms import ExcelUploadForm
 
     if request.method == 'POST':
@@ -442,7 +441,7 @@ def upload_excel(request):
             max_cols = max(len(r) for r in raw_rows) if raw_rows else 0
             formula_columns = set()
 
-            for r_i, row in enumerate(raw_rows):
+            for row in raw_rows:
                 for c_i, val in enumerate(row):
                     if c_i < max_cols and val.startswith("="):
                         formula_columns.add(c_i)
@@ -470,18 +469,13 @@ def preview_excel(request):
     Шаг 2: Показываем первую строку как заголовок и ТОЛЬКО 7 строк данных.
     Кнопка "Подтвердить" -> /process-excel/
     """
-    # (код остался без изменений)
-    from django.contrib import messages
-
     rows_data = request.session.get('excel_rows')
     if not rows_data:
         messages.error(request, "Нет данных в Excel. Сначала загрузите файл.")
         return redirect('upload_excel')
 
     headers = rows_data[0] if rows_data else []
-    data_rows = rows_data[1:] if len(rows_data) > 1 else []
-
-    data_rows = data_rows[:7]
+    data_rows = rows_data[1:8] if len(rows_data) > 1 else []
 
     return render(request, 'vacancies/preview_excel.html', {
         'headers': headers,
@@ -611,44 +605,32 @@ def edit_vacancy(request, vacancy_id):
 
 #обновляем курсы валют 
 def handle():
-    print('обновляем курсы валют')
+    print('Обновляем курсы валют')
     try:
         response = requests.get('https://api.nbrb.by/exrates/rates?periodicity=0', verify=False)
         if response.status_code == 200:
             data = response.json()
-            updated_count = 0
+            updated_count = 1
             
             for rate_data in data:
                 currency = rate_data['Cur_Abbreviation']
                 rate = rate_data['Cur_OfficialRate'] / rate_data['Cur_Scale']
                 
-                exchange_rate, created = ExchangeRate.objects.update_or_create(
+                ExchangeRate.objects.update_or_create(
                     currency=currency,
                     defaults={'rate': rate}
                 )
                 updated_count += 1
-                print(
-                    f'Обновлен курс {currency}: {rate} BYN'
-                )
+                print(f'Обновлен курс {currency}: {rate} BYN')
             
             # Добавляем BYN как базовую валюту с курсом 1.0
             ExchangeRate.objects.update_or_create(
                 currency='BYN',
                 defaults={'rate': 1.0}
             )
-            updated_count += 1
-            
-            print(
-                f'Всего успешно обновлено {updated_count} курсов валют'
-            )
+
+            print(f'Всего успешно обновлено {updated_count} курсов валют')
         else:
-            print(
-                f'Ошибка API: {response.status_code}'
-            )
+            print(f'Ошибка API: {response.status_code}')
     except Exception as e:
-        print(f"Ошибка при получении курсов валют из БД: {e}")
-        # В случае ошибки используем резервные значения
-        rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033, 'UZS': 0.00020}
-        print(
-            f'Ошибка при обновлении курсов: {str(e)}'
-        ) 
+        print(f"Ошибка при получении курсов валют: {e}")
