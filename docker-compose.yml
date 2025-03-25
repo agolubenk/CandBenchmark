@@ -8,7 +8,7 @@ x-default-python:
   restart: always
   env_file: .env
   environment:
-    - DJANGO_SETTINGS_MODULE=CandBenchmark.settings
+    - DJANGO_SETTINGS_MODULE=benchmark.settings
     - PYTHONUNBUFFERED=1
     - DB_HOST=postgres
     - REDIS_HOST=redis
@@ -21,13 +21,13 @@ services:
       - "6379:6379"
   celery-worker:
     <<: *default-python
-    command: python3 -m celery -A CandBenchmark worker -l info
+    command: python3 -m celery -A benchmark worker -l info
     depends_on:
       - redis
       - web
   celery-beat:
     <<: *default-python
-    command: python3 -m celery -A CandBenchmark beat -l info
+    command: python3 -m celery -A benchmark beat -l info
     depends_on:
       - redis
       - web
