@@ -533,6 +533,18 @@
             });
         }
 
+        // Список стран для отдельного отображения
+        const mainCountries = [
+            'Беларусь', 'Россия', 'Казахстан', 'Узбекистан', 'Кыргызстан', 
+            'Таджикистан', 'Азербайджан', 'Армения', 'Молдова', 'Туркменистан',
+            'Грузия', 'Кипр', 'Сербия', 'Польша'
+        ];
+
+        // Функция для определения группы страны
+        function getCountryGroup(country) {
+            return mainCountries.includes(country) ? country : 'Остальные страны';
+        }
+
         // Функция обновления графиков с учетом фильтров
         function updateCharts() {
             // Получаем отфильтрованные строки из таблицы
@@ -592,53 +604,60 @@
                     const countries = extractCountries(geoCell);
                     
                     countries.forEach(country => {
-                        if (!lineData[country]) {
-                            lineData[country] = {};
+                        const group = getCountryGroup(country);
+                        if (!lineData[group]) {
+                            lineData[group] = {};
                         }
-                        if (!lineData[country][spec]) {
-                            lineData[country][spec] = [];
+                        if (!lineData[group][spec]) {
+                            lineData[group][spec] = [];
                         }
-                        lineData[country][spec].push(parseFloat(marketMedian));
+                        lineData[group][spec].push(parseFloat(marketMedian));
                     });
                 });
 
                 const uniqueSpecializations = Array.from(specializations);
-                // Получаем все уникальные страны из данных
-                const availableCountries = Array.from(new Set(
+                // Получаем все уникальные группы стран из данных
+                const availableGroups = Array.from(new Set(
                     filteredRows.flatMap(row => 
                         extractCountries(row.querySelectorAll('td')[0].textContent)
+                        .map(country => getCountryGroup(country))
                     )
                 )).sort();
 
-                // Цвета для стран (расширенная палитра)
-                const countryColors = {
-                    'Беларусь': { border: 'rgba(25, 135, 84, 1)', background: 'rgba(25, 135, 84, 0.1)' },
-                    'Россия': { border: 'rgba(13, 110, 253, 1)', background: 'rgba(13, 110, 253, 0.1)' },
-                    'Польша': { border: 'rgba(220, 53, 69, 1)', background: 'rgba(220, 53, 69, 0.1)' },
-                    'Казахстан': { border: 'rgba(255, 193, 7, 1)', background: 'rgba(255, 193, 7, 0.1)' },
-                    'Украина': { border: 'rgba(111, 66, 193, 1)', background: 'rgba(111, 66, 193, 0.1)' },
-                    'Литва': { border: 'rgba(23, 162, 184, 1)', background: 'rgba(23, 162, 184, 0.1)' },
-                    'Латвия': { border: 'rgba(255, 127, 80, 1)', background: 'rgba(255, 127, 80, 0.1)' },
-                    'Эстония': { border: 'rgba(108, 117, 125, 1)', background: 'rgba(108, 117, 125, 0.1)' },
-                    'Узбекистан': { border: 'rgba(40, 167, 69, 1)', background: 'rgba(40, 167, 69, 0.1)' },
-                    'Грузия': { border: 'rgba(102, 16, 242, 1)', background: 'rgba(102, 16, 242, 0.1)' }
+                // Цвета для групп стран (обновленная схема с уникальными цветами)
+                const groupColors = {
+                    'Беларусь': { border: 'rgba(25, 135, 84, 1)', background: 'rgba(25, 135, 84, 0.1)' },    // Зеленый
+                    'Россия': { border: 'rgba(13, 110, 253, 1)', background: 'rgba(13, 110, 253, 0.1)' },    // Синий
+                    'Казахстан': { border: 'rgba(255, 193, 7, 1)', background: 'rgba(255, 193, 7, 0.1)' },   // Желтый
+                    'Узбекистан': { border: 'rgba(220, 53, 69, 1)', background: 'rgba(220, 53, 69, 0.1)' },  // Красный
+                    'Кыргызстан': { border: 'rgba(111, 66, 193, 1)', background: 'rgba(111, 66, 193, 0.1)' }, // Фиолетовый
+                    'Таджикистан': { border: 'rgba(23, 162, 184, 1)', background: 'rgba(23, 162, 184, 0.1)' }, // Голубой
+                    'Азербайджан': { border: 'rgba(255, 127, 80, 1)', background: 'rgba(255, 127, 80, 0.1)' }, // Оранжевый
+                    'Армения': { border: 'rgba(40, 167, 69, 1)', background: 'rgba(40, 167, 69, 0.1)' },      // Зеленый
+                    'Молдова': { border: 'rgba(102, 16, 242, 1)', background: 'rgba(102, 16, 242, 0.1)' },    // Пурпурный
+                    'Туркменистан': { border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.1)' }, // Розовый
+                    'Грузия': { border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.1)' },     // Светло-синий
+                    'Кипр': { border: 'rgba(153, 102, 255, 1)', background: 'rgba(153, 102, 255, 0.1)' },     // Фиолетовый
+                    'Сербия': { border: 'rgba(255, 159, 64, 1)', background: 'rgba(255, 159, 64, 0.1)' },     // Оранжевый
+                    'Польша': { border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.1)' },     // Бирюзовый
+                    'Остальные страны': { border: 'rgba(108, 117, 125, 1)', background: 'rgba(108, 117, 125, 0.1)' } // Серый
                 };
 
-                // Функция для получения цвета для страны
-                function getCountryColors(country) {
-                    return countryColors[country] || {
+                // Функция для получения цвета для группы
+                function getGroupColors(group) {
+                    return groupColors[group] || {
                         border: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
                         background: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.1)`
                     };
                 }
 
                 lineChart.data.labels = uniqueSpecializations;
-                lineChart.data.datasets = availableCountries.map(country => {
-                    const colors = getCountryColors(country);
+                lineChart.data.datasets = availableGroups.map(group => {
+                    const colors = getGroupColors(group);
                     return {
-                        label: country,
+                        label: group,
                         data: uniqueSpecializations.map(spec => {
-                            const values = lineData[country]?.[spec] || [];
+                            const values = lineData[group]?.[spec] || [];
                             return values.length ? calculateMedian(values) : null;
                         }),
                         borderColor: colors.border,

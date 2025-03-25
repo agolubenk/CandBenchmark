@@ -246,16 +246,15 @@ def pivot_summary(request):
     def convert_to_byn(amount, ccy):
         """
         Конвертирует сумму в BYN по актуальному курсу НБРБ.
-        Использует кэшированные значения курсов, обновляемые каждые 3 часа.
         
         Args:
             amount: сумма для конвертации
-            ccy: валюта (USD, EUR, RUB, BYN)
+            ccy: валюта (USD, EUR, RUB, BYN и др.)
         
         Returns:
-            float: сумма в BYN
+            float: сумма в BYN или None если конвертация невозможна
         """
-        if amount is None:
+        if amount is None or not ccy:
             return None
         
         if ccy == 'BYN':
@@ -266,8 +265,9 @@ def pivot_summary(request):
         if ccy in rates:
             return amount * rates[ccy]
         
-        # Если валюта неизвестна, возвращаем исходную сумму
-        return amount
+        # Если валюта неизвестна, логируем это и возвращаем None
+        logger.warning(f"Неизвестная валюта для конвертации: {ccy}")
+        return None
 
     # 1) Сгруппируем по (spec, grade, geo, currency) -> получим "gross" значения
     groups_gross = defaultdict(lambda: {
@@ -502,6 +502,56 @@ def process_excel(request):
     return redirect('index')
 
 
+def handle():
+    logger.info('Обновляем курсы валют')
+    try:
+        response = requests.get('https://api.nbrb.by/exrates/rates?periodicity=0', verify=False)
+        if response.status_code == 200:
+            data = response.json()
+            updated_count = 1
+            unsupported_currencies = set()
+            
+            # Добавляем BYN как базовую валюту
+            ExchangeRate.objects.update_or_create(
+                currency='BYN',
+                defaults={'rate': 1.0}
+            )
+            
+            for rate_data in data:
+                try:
+                    currency = rate_data.get('Cur_Abbreviation')
+                    if not currency:
+                        continue
+                        
+                    rate = rate_data.get('Cur_OfficialRate')
+                    scale = rate_data.get('Cur_Scale', 1)
+                    
+                    if rate is None or scale == 0:
+                        unsupported_currencies.add(currency)
+                        continue
+                    
+                    rate = float(rate) / float(scale)
+                    
+                    ExchangeRate.objects.update_or_create(
+                        currency=currency,
+                        defaults={'rate': rate}
+                    )
+                    updated_count += 1
+                    logger.info(f'Обновлен курс {currency}: {rate} BYN')
+                except Exception as e:
+                    logger.error(f'Ошибка при обработке валюты {currency}: {e}')
+                    unsupported_currencies.add(currency)
+            
+            if unsupported_currencies:
+                logger.warning(f'Не удалось обновить курсы для валют: {", ".join(unsupported_currencies)}')
+            
+            logger.info(f'Всего успешно обновлено {updated_count} курсов валют')
+        else:
+            logger.error(f'Ошибка API НБРБ: {response.status_code}')
+    except Exception as e:
+        logger.error(f"Ошибка при получении курсов валют: {e}")
+
+
 def get_exchange_rates():
     """
     Получает курсы валют из базы данных.
@@ -526,15 +576,16 @@ def get_exchange_rates():
             
             # Если есть актуальные курсы, кэшируем их на 1 час
             if rates:
-                cache.set(cache_key, rates, timeout=3600)
+                cache.set(cache_key, rates, timeout=3600)  # 1 час
             else:
-                # Если курсы устарели, используем резервные значения
-                rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033}
+                # Если курсы устарели, запускаем обновление и используем резервные значения
+                handle()  # Пробуем обновить курсы
+                rates = {'USD': 3.2, 'EUR': 3.5, 'RUB': 0.035, 'UZS': 0.00026, 'BYN': 1.0}
                 
         except Exception as e:
             logger.error(f"Ошибка при получении курсов валют из БД: {e}")
             # В случае ошибки используем резервные значения
-            rates = {'USD': 2.5, 'EUR': 2.6, 'RUB': 0.033}
+            rates = {'USD': 3.2, 'EUR': 3.5, 'RUB': 0.035, 'UZS': 0.00026, 'BYN': 1.0}
     
     return rates
 
@@ -602,35 +653,3 @@ def edit_vacancy(request, vacancy_id):
             'edited_at': vacancy.last_edited_at
         }
     })
-
-#обновляем курсы валют 
-def handle():
-    print('Обновляем курсы валют')
-    try:
-        response = requests.get('https://api.nbrb.by/exrates/rates?periodicity=0', verify=False)
-        if response.status_code == 200:
-            data = response.json()
-            updated_count = 1
-            
-            for rate_data in data:
-                currency = rate_data['Cur_Abbreviation']
-                rate = rate_data['Cur_OfficialRate'] / rate_data['Cur_Scale']
-                
-                ExchangeRate.objects.update_or_create(
-                    currency=currency,
-                    defaults={'rate': rate}
-                )
-                updated_count += 1
-                print(f'Обновлен курс {currency}: {rate} BYN')
-            
-            # Добавляем BYN как базовую валюту с курсом 1.0
-            ExchangeRate.objects.update_or_create(
-                currency='BYN',
-                defaults={'rate': 1.0}
-            )
-
-            print(f'Всего успешно обновлено {updated_count} курсов валют')
-        else:
-            print(f'Ошибка API: {response.status_code}')
-    except Exception as e:
-        print(f"Ошибка при получении курсов валют: {e}")
