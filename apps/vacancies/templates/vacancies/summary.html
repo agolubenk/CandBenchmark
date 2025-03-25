@@ -225,9 +225,11 @@
         // Объявляем все переменные в начале
         let barChart, lineChart, pieChart, gradeChart;
         let isRBFilterActive = false;
+        let isCISFilterActive = false;
         
         // Получаем все необходимые элементы
         const filterByRBButton = document.getElementById("filterByRB");
+        const filterByCISButton = document.getElementById("filterByCIS");
         const showAllButton = document.getElementById("showAll");
         const exchangeRateBtn = document.querySelector('.exchange-rate-btn');
         const downloadBtn = document.getElementById('downloadChartsPDF');
@@ -235,23 +237,17 @@
         const gradeInput = document.getElementById("grade");
         const geoInput = document.getElementById("geo");
 
-        // Анимация кнопки курсов валют
-        if (exchangeRateBtn) {
-            exchangeRateBtn.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.1) rotate(15deg)';
-            });
-            exchangeRateBtn.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1) rotate(0deg)';
-            });
-        }
+        // Список стран СНГ
+        const cisCountries = [
+            'Беларусь', 'Россия', 'Казахстан', 'Узбекистан', 'Кыргызстан', 
+            'Таджикистан', 'Азербайджан', 'Армения', 'Молдова', 'Туркменистан'
+        ];
 
-        // Добавляем обработчик для кнопки скачивания PDF
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Клик по кнопке скачивания PDF');
-                downloadChartsPDF();
-            });
+        // Функция для проверки, является ли страна страной СНГ
+        function isCISCountry(country) {
+            return cisCountries.some(cisCountry => 
+                country.toLowerCase().includes(cisCountry.toLowerCase())
+            );
         }
 
         // Функция для фильтрации таблиц
@@ -287,6 +283,13 @@
                     if (isRBFilterActive && !cellGeo.includes("беларусь")) {
                         visible = false;
                     }
+                    if (isCISFilterActive) {
+                        const countries = extractCountries(cells[0].textContent);
+                        const hasCISCountry = countries.some(country => isCISCountry(country));
+                        if (!hasCISCountry) {
+                            visible = false;
+                        }
+                    }
                     
                     row.style.display = visible ? "" : "none";
                 }
@@ -301,20 +304,52 @@
         gradeInput.addEventListener("input", filterTables);
         geoInput.addEventListener("input", filterTables);
 
-        // Обработчики для кнопок фильтрации по РБ
+        // Обработчики для кнопок фильтрации
         filterByRBButton.addEventListener("click", function() {
             isRBFilterActive = true;
+            isCISFilterActive = false;
             filterByRBButton.classList.add("d-none");
+            filterByCISButton.classList.remove("d-none");
+            showAllButton.classList.remove("d-none");
+            filterTables();
+        });
+
+        filterByCISButton.addEventListener("click", function() {
+            isRBFilterActive = false;
+            isCISFilterActive = true;
+            filterByCISButton.classList.add("d-none");
+            filterByRBButton.classList.remove("d-none");
             showAllButton.classList.remove("d-none");
             filterTables();
         });
 
         showAllButton.addEventListener("click", function() {
             isRBFilterActive = false;
+            isCISFilterActive = false;
             showAllButton.classList.add("d-none");
             filterByRBButton.classList.remove("d-none");
+            filterByCISButton.classList.remove("d-none");
             filterTables();
         });
+
+        // Анимация кнопки курсов валют
+        if (exchangeRateBtn) {
+            exchangeRateBtn.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1) rotate(15deg)';
+            });
+            exchangeRateBtn.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        }
+
+        // Добавляем обработчик для кнопки скачивания PDF
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Клик по кнопке скачивания PDF');
+                downloadChartsPDF();
+            });
+        }
 
         // Функция для скачивания графиков в PDF
         async function downloadChartsPDF() {
@@ -430,6 +465,11 @@
                 
                 if (isRBFilterActive) {
                     pdf.text('Только Беларусь', 10, filterY);
+                    filterY += 5;
+                }
+                
+                if (isCISFilterActive) {
+                    pdf.text('Только СНГ', 10, filterY);
                     filterY += 5;
                 }
                 
@@ -1295,8 +1335,11 @@
                 <input type="text" class="form-control" id="geo" name="geo" placeholder="Например: Беларусь, Минск">
             </div>
             <div class="col-md-3">
-                <button type="button" class="btn btn-primary" id="filterByRB">Только РБ</button>
-                <button type="button" class="btn btn-outline-primary d-none" id="showAll">Показать все</button>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" id="filterByRB">Только РБ</button>
+                    <button type="button" class="btn btn-outline-primary" id="filterByCIS">Только СНГ</button>
+                    <button type="button" class="btn btn-outline-primary d-none" id="showAll">Показать все</button>
+                </div>
             </div>
         </div>
     </form>
