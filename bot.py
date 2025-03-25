@@ -3,7 +3,7 @@ import logging
 from asgiref.sync import sync_to_async
 
 # Настраиваем окружение Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CandBenchmark.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "benchmark.settings")
 import django
 
 django.setup()
@@ -20,7 +20,7 @@ from telegram.ext import (
 )
 
 # Импорт моделей: TaskQueue
-from vacancies.models import TaskQueue
+from apps.vacancies.models import TaskQueue
 
 # Настройка логирования
 logging.basicConfig(
