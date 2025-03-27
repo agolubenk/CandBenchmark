@@ -26,7 +26,7 @@ class Command(BaseCommand):
             params = {
                 "text": current_query, 
                 "only_with_salary": True,
-                "area": "Беларусь",
+                "area": 16,
                 "page": 0,
                 "per_page": 20,  # Количество вакансий на одной странице
             }
