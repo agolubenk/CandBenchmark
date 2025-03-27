@@ -46,6 +46,11 @@ class Vacancy(models.Model):
         auto_now=True,
         verbose_name='Дата последнего редактирования'
     )
+    is_active = models.BooleanField(
+        verbose_name='Учитывать в статистике',
+        default=True,
+        help_text='Если отключено, вакансия не будет учитываться в статистике и сводных таблицах'
+    )
 
     def clean(self):
         if self.salary_min and self.salary_max and self.salary_min > self.salary_max:

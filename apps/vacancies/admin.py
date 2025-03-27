@@ -139,10 +139,11 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
-    list_display = ('company', 'geo', 'specialization', 'grade', 'salary_min', 'salary_max', 'currency', 'date_posted')
-    list_filter = ('grade', 'geo', 'specialization', 'currency', 'date_posted')
+    list_display = ('company', 'geo', 'specialization', 'grade', 'salary_min', 'salary_max', 'currency', 'date_posted', 'is_active')
+    list_filter = ('grade', 'geo', 'specialization', 'currency', 'date_posted', 'is_active')
     search_fields = ('company', 'specialization', 'description')
     ordering = ('-id',)
+    list_editable = ('is_active',)
 
 @admin.register(GeminiResult)
 class GeminiResultAdmin(admin.ModelAdmin):
