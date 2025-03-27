@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def vacancy_detail(request, vacancy_id):
-    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    vacancy = get_object_or_404(Vacancy, pk=vacancy_id, is_active=True)
     form = VacancyEditForm(instance=vacancy)
     edit_history = {
         'editor': vacancy.last_edited_by.get_full_name() if vacancy.last_edited_by else None,
@@ -49,10 +49,11 @@ def index(request):
             Q(geo__icontains=search_query) |
             Q(specialization__icontains=search_query) |
             Q(grade__icontains=search_query) |
-            Q(description__icontains=search_query)
+            Q(description__icontains=search_query),
+            is_active=True
         ).order_by('-date_posted')
     else:
-        vacancies = Vacancy.objects.all().order_by('-date_posted')
+        vacancies = Vacancy.objects.filter(is_active=True).order_by('-date_posted')
     
     if date_from:
         df = datetime.strptime(date_from, '%Y-%m-%d')
@@ -122,7 +123,7 @@ def export_vacancies(request):
     ws.append(header)
 
     # Заполнение данных вакансий
-    for vac in Vacancy.objects.all():
+    for vac in Vacancy.objects.filter(is_active=True):
         row = [getattr(vac, field) for field in fields]
         ws.append(row)
 
@@ -206,10 +207,10 @@ def pivot_summary(request):
     grade_filter = request.GET.get('grade', '').strip()
     geo_filter = request.GET.get('geo', '').strip()
 
-    # Формируем начальный queryset с фильтрацией по последним 92 дням
+    # Формируем начальный queryset с фильтрацией по последним 92 дням и только активные вакансии
     today = timezone.now().date()
     ninety_two_days_ago = today - timedelta(days=91)  # 91 день назад включительно
-    qs = Vacancy.objects.filter(date_posted__gte=ninety_two_days_ago)
+    qs = Vacancy.objects.filter(date_posted__gte=ninety_two_days_ago, is_active=True)
 
     # Применяем простую фильтрацию (по точному совпадению)
     if spec_filter:
@@ -623,7 +624,7 @@ def profile(request):
 
 @login_required
 def edit_vacancy(request, vacancy_id):
-    vacancy = get_object_or_404(Vacancy, pk=vacancy_id)
+    vacancy = get_object_or_404(Vacancy, pk=vacancy_id, is_active=True)
     if request.method == 'POST':
         form = VacancyEditForm(request.POST, instance=vacancy)
         if form.is_valid():
